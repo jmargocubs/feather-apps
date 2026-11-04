@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest an improvement
+body:
+  - type: dropdown
+    id: app
+    attributes: { label: App, options: [Kyro, Zepzi, Both] }
+  - type: textarea
+    id: improvement
+    attributes: { label: Requested improvement }
+  - type: textarea
+    id: usecase
+    attributes: { label: Use case }
+  - type: dropdown
+    id: priority
+    attributes: { label: Priority, options: [Low, Medium, High] }

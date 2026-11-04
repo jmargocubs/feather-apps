@@ -1,0 +1,16 @@
+name: Publish Beta
+on:
+  workflow_dispatch:
+    inputs:
+      app: { description: "kyro or zepzi", required: true }
+      version: { description: "version", required: true }
+      build: { description: "build", required: true }
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release-approval
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "Manual IPA upload + validation + release creation goes here (approval gated)"

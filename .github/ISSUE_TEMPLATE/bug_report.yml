@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a beta bug
+body:
+  - type: dropdown
+    id: app
+    attributes: { label: App, options: [Kyro, Zepzi] }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: App version/build }
+  - type: input
+    id: ios
+    attributes: { label: iOS version }
+  - type: input
+    id: device
+    attributes: { label: Device model }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected behavior }
+  - type: textarea
+    id: actual
+    attributes: { label: Actual behavior }

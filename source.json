@@ -1,0 +1,23 @@
+{
+  "name": "jmargocubs Feather Beta Source",
+  "subtitle": "Kyro and Zepzi beta builds",
+  "description": "Feather-compatible source for Kyro and Zepzi beta IPAs hosted on GitHub Releases.",
+  "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
+  "headerURL": null,
+  "website": "https://jmargocubs.github.io/feather-apps/",
+  "tintColor": "#4F46E5",
+  "featuredApps": [],
+  "apps": [
+    {
+      "name": "Kyro",
+      "bundleIdentifier": "com.cubbiestream.kyro",
+      "developerName": "jmargocubs",
+      "subtitle": "Self-hosted media streaming client",
+      "localizedDescription": "Kyro is a native SwiftUI iOS streaming client for self-hosted media servers. Configure your own server in-app.",
+      "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
+      "tintColor": "#4F46E5",
+      "size": 0,
+      "versions": []
+    }
+  ]
+}
