@@ -6,7 +6,8 @@ on:
       version: { description: "version", required: true }
       build: { description: "build", required: true }
       release_notes: { description: "release notes", required: true }
-      rc_tag: { description: "draft RC release tag", required: true }
+      artifact_run_id: { description: "workflow run ID containing the staged IPA artifact", required: true }
+      artifact_name: { description: "exact artifact name", required: true }
       expected_sha256: { description: "expected sha256", required: true }
       expected_size: { description: "expected size bytes", required: true }
 permissions:
@@ -26,7 +27,6 @@ jobs:
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
-          RC_TAG: ${{ inputs.rc_tag }}
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
         run: |
@@ -36,31 +36,32 @@ jobs:
           echo "$BUILD" | grep -Eq '^[0-9]+$'
           echo "$SHA" | grep -Eq '^[0-9a-f]{64}$'
           echo "$SIZE" | grep -Eq '^[0-9]+$'
-      - name: Download RC IPA
+      - name: Download staged artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RC_TAG: ${{ inputs.rc_tag }}
+          RUN_ID: ${{ inputs.artifact_run_id }}
+          ART_NAME: ${{ inputs.artifact_name }}
         run: |
           set -euo pipefail
-          mkdir -p /tmp/rc
-          gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
-          test "$(ls /tmp/rc/*.ipa | wc -l)" -eq 1
+          mkdir -p /tmp/stage
+          gh run download "$RUN_ID" --repo ${{ github.repository }} --name "$ART_NAME" --dir /tmp/stage
+          test "$(find /tmp/stage -name '*.ipa' | wc -l)" -eq 1
       - name: Validate IPA
         env:
           BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
-        run: python scripts/validate_ipa.py /tmp/rc/*.ipa --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
+        run: python scripts/validate_ipa.py /tmp/stage/*.ipa --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
       - name: Security scan
-        run: python scripts/scan_ipa.py /tmp/rc/*.ipa
+        run: python scripts/scan_ipa.py /tmp/stage/*.ipa
       - name: Verify checksum and size
         env:
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
         run: |
           python - << 'PY'
-          import hashlib, os, glob, sys
-          ipa=glob.glob('/tmp/rc/*.ipa')[0]
+          import hashlib, os, glob
+          ipa=glob.glob('/tmp/stage/*.ipa')[0]
           sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
           size=os.path.getsize(ipa)
           assert sha==os.environ['SHA'], f"sha mismatch {sha}"
@@ -79,14 +80,15 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with: { python-version: "3.11" }
-      - name: Download RC IPA
+      - name: Download staged artifact
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RC_TAG: ${{ inputs.rc_tag }}
+          RUN_ID: ${{ inputs.artifact_run_id }}
+          ART_NAME: ${{ inputs.artifact_name }}
         run: |
           set -euo pipefail
-          mkdir -p /tmp/rc
-          gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
+          mkdir -p /tmp/stage
+          gh run download "$RUN_ID" --repo ${{ github.repository }} --name "$ART_NAME" --dir /tmp/stage
       - name: Reverify checksum and size
         env:
           SHA: ${{ inputs.expected_sha256 }}
@@ -94,7 +96,7 @@ jobs:
         run: |
           python - << 'PY'
           import hashlib, os, glob
-          ipa=glob.glob('/tmp/rc/*.ipa')[0]
+          ipa=glob.glob('/tmp/stage/*.ipa')[0]
           sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
           size=os.path.getsize(ipa)
           assert sha==os.environ['SHA']
@@ -123,10 +125,11 @@ jobs:
         run: |
           set -euo pipefail
           TAG="${APP}-v${VERSION}-b${BUILD}"
-          ASSET="/tmp/rc/$(ls /tmp/rc/*.ipa | xargs -n1 basename)"
+          ASSET="/tmp/stage/$(ls /tmp/stage/*.ipa | xargs -n1 basename)"
           gh release create "$TAG" "$ASSET" --repo ${{ github.repository }} --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
-      - name: Update source.json
+      - name: Update source.json via PR
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
@@ -134,32 +137,16 @@ jobs:
           TAG: ${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}
         run: |
           set -euo pipefail
-          ASSET="$(ls /tmp/rc/*.ipa | xargs -n1 basename)"
+          ASSET="$(ls /tmp/stage/*.ipa | xargs -n1 basename)"
           python scripts/update_source.py --app "$APP" --version "$VERSION" --build "$BUILD" --size "$SIZE" --tag "$TAG" --asset "$ASSET"
-      - name: Validate source
-        run: python scripts/validate_source.py source.json
-      - name: Commit and push source.json
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
           git config user.name "github-actions"
           git config user.email "actions@github.com"
+          BRANCH="source-update-${APP}-${VERSION}-b${BUILD}"
+          git checkout -b "$BRANCH"
           git add source.json
-          git commit -m "Update source for ${{ inputs.app }} ${{ inputs.version }} build ${{ inputs.build }}"
-          git push origin main
-      - name: Deploy Pages
-        uses: actions/configure-pages@983d7736d9b0ae728b8108732fe4c690d97cc09e
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e574736d1d65fa9c
-        with: { path: "." }
-      - name: Deploy Pages
-        uses: actions/deploy-pages@d65d3494d20208497995b339078e3772e375a917
+          git commit -m "Update source for $APP $VERSION build $BUILD"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "Source update: $APP $VERSION build $BUILD" --body "Automated source update after approved release."
       - name: Verify live source
         run: |
-          python - << 'PY'
-          import json, urllib.request
-          url="https://jmargocubs.github.io/feather-apps/source.json"
-          d=json.load(urllib.request.urlopen(url))
-          print("live apps:", [a["name"] for a in d["apps"]])
-          PY
+          python scripts/verify_live.py --app ${{ inputs.app }} --bundle "${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}" --version ${{ inputs.version }} --build ${{ inputs.build }} --size ${{ inputs.expected_size }} --ipa-url "https://github.com/jmargocubs/feather-apps/releases/download/${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}/$(ls /tmp/stage/*.ipa | xargs -n1 basename)"
