@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kyro & Zepzi Beta</title>
+<style>
+:root{--bg:#0b0d12;--card:#151922;--fg:#e6e8ee;--muted:#9aa3b2;--accent:#4f46e5;--border:#232838}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:960px;margin:0 auto;padding:24px}
+h1{font-size:28px;margin:0 0 8px}p.sub{color:var(--muted);margin:0 0 24px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+.card h2{margin:0 0 4px;font-size:20px}.ver{color:var(--muted);font-size:13px;margin:0 0 12px}
+.desc{font-size:14px;line-height:1.5;margin:0 0 16px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{background:var(--accent);color:#fff;text-decoration:none;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600}
+.btn.sec{background:transparent;border:1px solid var(--border);color:var(--fg)}
+.src{margin-top:24px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;font-size:13px;word-break:break-all}
+footer{margin-top:32px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Kyro &amp; Zepzi Beta</h1>
+<p class="sub">Unsigned beta builds. Testers must use their own compatible signing setup.</p>
+<div class="grid">
+<div class="card">
+<h2>Kyro</h2><p class="ver">v1.0.0 (build 22) · iOS 18+</p>
+<p class="desc">Native SwiftUI streaming client for self-hosted media servers. Configure your own server in-app. No credentials are shipped.</p>
+<div class="actions">
+<a class="btn" href="#" aria-disabled="true">Download IPA (pending release)</a>
+<a class="btn sec" href="source.json">Add to Feather</a>
+<a class="btn sec" href="https://github.com/jmargocubs/feather-apps/issues/new?template=bug_report.yml">Report a bug</a>
+</div>
+</div>
+<div class="card">
+<h2>Zepzi</h2><p class="ver">Pending verification · iOS 18+</p>
+<p class="desc">Native SwiftUI comic reader for Komga. Configure your own Komga server in-app.</p>
+<div class="actions">
+<a class="btn" href="#" aria-disabled="true">Download IPA (pending release)</a>
+<a class="btn sec" href="source.json">Add to Feather</a>
+<a class="btn sec" href="https://github.com/jmargocubs/feather-apps/issues/new?template=bug_report.yml">Report a bug</a>
+</div>
+</div>
+</div>
+<div class="src"><strong>Feather source URL:</strong><br>https://jmargocubs.github.io/feather-apps/source.json</div>
+<footer>No analytics or crash reporting. Do not post credentials, server addresses, or tokens in issues.</footer>
+</div>
+</body>
+</html>
