@@ -1,4 +1,4 @@
-# feather-apps
+# jmargocubs Apps
 
 Public beta distribution source for Kyro and Zepzi (Feather/AltStore compatible).
 
