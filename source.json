@@ -13,11 +13,20 @@
       "bundleIdentifier": "com.cubbiestream.kyro",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client",
-      "localizedDescription": "Kyro is a native SwiftUI iOS streaming client for self-hosted media servers. Configure your own server in-app.",
+      "localizedDescription": "Kyro is a native SwiftUI iOS streaming client for self-hosted media servers. Configure your own server in-app. Unsigned beta.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 0,
-      "versions": []
+      "size": 27160511,
+      "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "22",
+          "date": "2026-11-04",
+          "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyro-v1.0.0-b22/Kyro-Build22-Stabilization-Unsigned.ipa",
+          "size": 27160511,
+          "minOSVersion": "18.0"
+        }
+      ]
     }
   ]
 }
