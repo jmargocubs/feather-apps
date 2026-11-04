@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, json, urllib.request, sys
+import argparse, json, urllib.request, sys, time
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--url",default="https://jmargocubs.github.io/feather-apps/source.json")
@@ -10,7 +10,13 @@ def main():
     ap.add_argument("--size",type=int,required=True)
     ap.add_argument("--ipa-url",required=True)
     args=ap.parse_args()
-    d=json.load(urllib.request.urlopen(args.url))
+    for attempt in range(5):
+        try:
+            d=json.load(urllib.request.urlopen(args.url))
+            break
+        except Exception as e:
+            if attempt==4: raise
+            time.sleep(5)
     app=None
     for a in d["apps"]:
         if a["bundleIdentifier"]==args.bundle:

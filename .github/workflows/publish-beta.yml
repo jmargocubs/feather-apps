@@ -149,12 +149,12 @@ jobs:
           git commit -m "Update source for ${{ inputs.app }} ${{ inputs.version }} build ${{ inputs.build }}"
           git push origin main
       - name: Deploy Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b8108732fe4c690d97cc09e
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e574736d1d65fa9c
         with: { path: "." }
       - name: Deploy Pages
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d65d3494d20208497995b339078e3772e375a917
       - name: Verify live source
         run: |
           python - << 'PY'
