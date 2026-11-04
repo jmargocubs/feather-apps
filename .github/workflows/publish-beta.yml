@@ -46,7 +46,11 @@ jobs:
           gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
           test "$(ls /tmp/rc/*.ipa | wc -l)" -eq 1
       - name: Validate IPA
-        run: python scripts/validate_ipa.py /tmp/rc/*.ipa
+        env:
+          BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+        run: python scripts/validate_ipa.py /tmp/rc/*.ipa --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
       - name: Security scan
         run: python scripts/scan_ipa.py /tmp/rc/*.ipa
       - name: Verify checksum and size

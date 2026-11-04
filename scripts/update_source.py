@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import argparse, json, re, sys
+import argparse, json, sys
+from datetime import date
 
 def main():
     ap=argparse.ArgumentParser()
@@ -28,7 +29,7 @@ def main():
     entry={
         "version":args.version,
         "buildVersion":args.build,
-        "date":"2026-11-04",
+        "date":date.today().isoformat(),
         "downloadURL":url,
         "size":args.size,
         "minOSVersion":"18.0"
