@@ -2,33 +2,15 @@ name: Publish Beta
 on:
   workflow_dispatch:
     inputs:
-      app:
-        description: "App to publish (kyro or zepzi)"
-        required: true
-        type: choice
-        options: [kyro, zepzi]
-      version:
-        description: "Version (e.g. 1.0.0)"
-        required: true
-      build:
-        description: "Build number"
-        required: true
-      release_notes:
-        description: "Release notes"
-        required: true
-      rc_tag:
-        description: "Draft RC release tag containing the IPA"
-        required: true
-      expected_sha256:
-        description: "Expected SHA-256 of IPA"
-        required: true
-      expected_size:
-        description: "Expected IPA size in bytes"
-        required: true
+      app: { description: "kyro or zepzi", required: true, type: choice, options: [kyro, zepzi] }
+      version: { description: "version", required: true }
+      build: { description: "build", required: true }
+      release_notes: { description: "release notes", required: true }
+      rc_tag: { description: "draft RC release tag", required: true }
+      expected_sha256: { description: "expected sha256", required: true }
+      expected_size: { description: "expected size bytes", required: true }
 permissions:
-  contents: write
-  pages: write
-  id-token: write
+  contents: read
 concurrency:
   group: publish-beta
   cancel-in-progress: false
@@ -36,54 +18,144 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with: { python-version: "3.11" }
+      - name: Validate inputs
+        env:
+          APP: ${{ inputs.app }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+          RC_TAG: ${{ inputs.rc_tag }}
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
+        run: |
+          set -euo pipefail
+          echo "$APP" | grep -Eq '^(kyro|zepzi)$'
+          echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?$'
+          echo "$BUILD" | grep -Eq '^[0-9]+$'
+          echo "$SHA" | grep -Eq '^[0-9a-f]{64}$'
+          echo "$SIZE" | grep -Eq '^[0-9]+$'
       - name: Download RC IPA
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RC_TAG: ${{ inputs.rc_tag }}
         run: |
+          set -euo pipefail
           mkdir -p /tmp/rc
           gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
+          test "$(ls /tmp/rc/*.ipa | wc -l)" -eq 1
       - name: Validate IPA
         run: python scripts/validate_ipa.py /tmp/rc/*.ipa
       - name: Security scan
         run: python scripts/scan_ipa.py /tmp/rc/*.ipa
-  publish:
-    needs: validate
-    runs-on: ubuntu-latest
-    environment: release-approval
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
-      - name: Download RC IPA
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mkdir -p /tmp/rc
-          gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
       - name: Verify checksum and size
+        env:
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
         run: |
           python - << 'PY'
           import hashlib, os, glob, sys
           ipa=glob.glob('/tmp/rc/*.ipa')[0]
           sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
           size=os.path.getsize(ipa)
-          assert sha=='${{ inputs.expected_sha256 }}', f"sha mismatch {sha}"
-          assert str(size)=='${{ inputs.expected_size }}', f"size mismatch {size}"
+          assert sha==os.environ['SHA'], f"sha mismatch {sha}"
+          assert str(size)==os.environ['SIZE'], f"size mismatch {size}"
           print("verified", sha, size)
           PY
+  publish:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: release-approval
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with: { python-version: "3.11" }
+      - name: Download RC IPA
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RC_TAG: ${{ inputs.rc_tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rc
+          gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
+      - name: Reverify checksum and size
+        env:
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
+        run: |
+          python - << 'PY'
+          import hashlib, os, glob
+          ipa=glob.glob('/tmp/rc/*.ipa')[0]
+          sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
+          size=os.path.getsize(ipa)
+          assert sha==os.environ['SHA']
+          assert str(size)==os.environ['SIZE']
+          print("reverified", sha, size)
+          PY
+      - name: Check duplicate tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP: ${{ inputs.app }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+        run: |
+          set -euo pipefail
+          TAG="${APP}-v${VERSION}-b${BUILD}"
+          if gh release view "$TAG" --repo ${{ github.repository }} >/dev/null 2>&1; then
+            echo "duplicate tag $TAG"; exit 1
+          fi
       - name: Create release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP: ${{ inputs.app }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+          NOTES: ${{ inputs.release_notes }}
         run: |
-          TAG="${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}"
-          gh release create "$TAG" /tmp/rc/*.ipa --repo ${{ github.repository }} --title "${{ inputs.app }} ${{ inputs.version }} (Build ${{ inputs.build }}) Beta" --notes "${{ inputs.release_notes }}"
+          set -euo pipefail
+          TAG="${APP}-v${VERSION}-b${BUILD}"
+          ASSET="/tmp/rc/$(ls /tmp/rc/*.ipa | xargs -n1 basename)"
+          gh release create "$TAG" "$ASSET" --repo ${{ github.repository }} --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
       - name: Update source.json
+        env:
+          APP: ${{ inputs.app }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+          SIZE: ${{ inputs.expected_size }}
+          TAG: ${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}
         run: |
-          python scripts/update_source.py --app ${{ inputs.app }} --version ${{ inputs.version }} --build ${{ inputs.build }} --size ${{ inputs.expected_size }} --sha ${{ inputs.expected_sha256 }} --tag "${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}"
+          set -euo pipefail
+          ASSET="$(ls /tmp/rc/*.ipa | xargs -n1 basename)"
+          python scripts/update_source.py --app "$APP" --version "$VERSION" --build "$BUILD" --size "$SIZE" --tag "$TAG" --asset "$ASSET"
       - name: Validate source
         run: python scripts/validate_source.py source.json
+      - name: Commit and push source.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add source.json
+          git commit -m "Update source for ${{ inputs.app }} ${{ inputs.version }} build ${{ inputs.build }}"
+          git push origin main
       - name: Deploy Pages
         uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with: { path: "." }
+      - name: Deploy Pages
+        uses: actions/deploy-pages@v4
+      - name: Verify live source
+        run: |
+          python - << 'PY'
+          import json, urllib.request
+          url="https://jmargocubs.github.io/feather-apps/source.json"
+          d=json.load(urllib.request.urlopen(url))
+          print("live apps:", [a["name"] for a in d["apps"]])
+          PY
