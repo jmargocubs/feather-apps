@@ -2,15 +2,88 @@ name: Publish Beta
 on:
   workflow_dispatch:
     inputs:
-      app: { description: "kyro or zepzi", required: true }
-      version: { description: "version", required: true }
-      build: { description: "build", required: true }
+      app:
+        description: "App to publish (kyro or zepzi)"
+        required: true
+        type: choice
+        options: [kyro, zepzi]
+      version:
+        description: "Version (e.g. 1.0.0)"
+        required: true
+      build:
+        description: "Build number"
+        required: true
+      release_notes:
+        description: "Release notes"
+        required: true
+      rc_tag:
+        description: "Draft RC release tag containing the IPA"
+        required: true
+      expected_sha256:
+        description: "Expected SHA-256 of IPA"
+        required: true
+      expected_size:
+        description: "Expected IPA size in bytes"
+        required: true
 permissions:
   contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: publish-beta
+  cancel-in-progress: false
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Download RC IPA
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/rc
+          gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
+      - name: Validate IPA
+        run: python scripts/validate_ipa.py /tmp/rc/*.ipa
+      - name: Security scan
+        run: python scripts/scan_ipa.py /tmp/rc/*.ipa
   publish:
+    needs: validate
     runs-on: ubuntu-latest
     environment: release-approval
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Manual IPA upload + validation + release creation goes here (approval gated)"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Download RC IPA
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p /tmp/rc
+          gh release download "$RC_TAG" --repo ${{ github.repository }} --pattern "*.ipa" --dir /tmp/rc
+      - name: Verify checksum and size
+        run: |
+          python - << 'PY'
+          import hashlib, os, glob, sys
+          ipa=glob.glob('/tmp/rc/*.ipa')[0]
+          sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
+          size=os.path.getsize(ipa)
+          assert sha=='${{ inputs.expected_sha256 }}', f"sha mismatch {sha}"
+          assert str(size)=='${{ inputs.expected_size }}', f"size mismatch {size}"
+          print("verified", sha, size)
+          PY
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}"
+          gh release create "$TAG" /tmp/rc/*.ipa --repo ${{ github.repository }} --title "${{ inputs.app }} ${{ inputs.version }} (Build ${{ inputs.build }}) Beta" --notes "${{ inputs.release_notes }}"
+      - name: Update source.json
+        run: |
+          python scripts/update_source.py --app ${{ inputs.app }} --version ${{ inputs.version }} --build ${{ inputs.build }} --size ${{ inputs.expected_size }} --sha ${{ inputs.expected_sha256 }} --tag "${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}"
+      - name: Validate source
+        run: python scripts/validate_source.py source.json
+      - name: Deploy Pages
+        uses: actions/configure-pages@v5
