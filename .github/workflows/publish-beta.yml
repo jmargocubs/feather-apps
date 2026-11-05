@@ -1,150 +1,296 @@
 name: Publish Beta
+run-name: ${{ inputs.operation }} ${{ inputs.app }} ${{ inputs.version }} ${{ inputs.build }} ${{ inputs.artifact_name }}
+
 on:
   workflow_dispatch:
     inputs:
-      app: { description: "kyro or zepzi", required: true, type: choice, options: [kyro, zepzi] }
-      version: { description: "version", required: true }
-      build: { description: "build", required: true }
-      release_notes: { description: "release notes", required: true }
-      artifact_run_id: { description: "workflow run ID containing the staged IPA artifact", required: true }
-      artifact_name: { description: "exact artifact name", required: true }
-      expected_sha256: { description: "expected sha256", required: true }
-      expected_size: { description: "expected size bytes", required: true }
+      operation:
+        description: "stage, validate, or publish"
+        required: true
+        type: choice
+        options: [stage, validate, publish]
+      app:
+        description: "kyro or zepzi"
+        required: true
+        type: choice
+        options: [kyro, zepzi]
+      version: { description: "app version (validate/publish)", required: false }
+      build: { description: "app build (validate/publish)", required: false }
+      release_notes: { description: "release notes (publish)", required: false }
+      artifact_run_id: { description: "staging workflow run ID (validate/publish)", required: false }
+      artifact_name: { description: "exact Actions artifact name", required: true }
+      expected_sha256: { description: "expected IPA SHA-256", required: true }
+      expected_size: { description: "expected IPA size in bytes", required: true }
+      staging_locator: { description: "draft release_id:asset_id (stage only)", required: false }
+
 permissions:
   contents: read
+  actions: read
+
 concurrency:
-  group: publish-beta
+  group: publish-beta-${{ inputs.operation }}-${{ inputs.app }}
   cancel-in-progress: false
+
 jobs:
-  validate:
+  stage:
+    if: inputs.operation == 'stage'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Validate staging request
+        env:
+          APP: ${{ inputs.app }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
+          LOCATOR: ${{ inputs.staging_locator }}
+        run: |
+          set -euo pipefail
+          [[ "$APP" =~ ^(kyro|zepzi)$ ]]
+          [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
+          [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$SIZE" =~ ^[0-9]+$ ]]
+          [[ "$LOCATOR" =~ ^[0-9]+:[0-9]+$ ]]
+
+      - name: Download authenticated draft asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          APP: ${{ inputs.app }}
+          LOCATOR: ${{ inputs.staging_locator }}
+        run: |
+          set -euo pipefail
+          RELEASE_ID="${LOCATOR%%:*}"
+          ASSET_ID="${LOCATOR##*:}"
+          gh api "repos/$REPOSITORY/releases/$RELEASE_ID" > /tmp/staging-release.json
+          jq -e --argjson asset_id "$ASSET_ID" '
+            .draft == true and
+            any(.assets[]; .id == $asset_id and .state == "uploaded" and (.name | endswith(".ipa")))
+          ' /tmp/staging-release.json >/dev/null
+          mkdir -p /tmp/stage
+          gh api "repos/$REPOSITORY/releases/assets/$ASSET_ID" \
+            -H "Accept: application/octet-stream" > "/tmp/stage/$APP.ipa"
+
+      - name: Verify staged bytes
+        env:
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
+        run: |
+          set -euo pipefail
+          test "$(find /tmp/stage -type f -name '*.ipa' | wc -l | tr -d ' ')" -eq 1
+          python - <<'PY'
+          import glob, hashlib, os
+          paths = glob.glob('/tmp/stage/*.ipa')
+          assert len(paths) == 1, f"expected one IPA, found {len(paths)}"
+          path = paths[0]
+          digest = hashlib.sha256(open(path, 'rb').read()).hexdigest()
+          size = os.path.getsize(path)
+          assert digest == os.environ['SHA'], f"SHA-256 mismatch: {digest}"
+          assert str(size) == os.environ['SIZE'], f"size mismatch: {size}"
+          print(f"verified {path}: sha256={digest} size={size}")
+          PY
+
+      - name: Upload immutable Actions artifact
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: /tmp/stage/*.ipa
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+
+      - name: Remove temporary draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          LOCATOR: ${{ inputs.staging_locator }}
+        run: |
+          set -euo pipefail
+          RELEASE_ID="${LOCATOR%%:*}"
+          gh api --method DELETE "repos/$REPOSITORY/releases/$RELEASE_ID"
+
+  validate:
+    if: inputs.operation == 'validate' || inputs.operation == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with: { python-version: "3.11" }
       - name: Validate inputs
         env:
+          OPERATION: ${{ inputs.operation }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
+          NOTES: ${{ inputs.release_notes }}
+          RUN_ID: ${{ inputs.artifact_run_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
         run: |
           set -euo pipefail
-          echo "$APP" | grep -Eq '^(kyro|zepzi)$'
-          echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+(\.[0-9]+)?$'
-          echo "$BUILD" | grep -Eq '^[0-9]+$'
-          echo "$SHA" | grep -Eq '^[0-9a-f]{64}$'
-          echo "$SIZE" | grep -Eq '^[0-9]+$'
-      - name: Download staged artifact
+          [[ "$APP" =~ ^(kyro|zepzi)$ ]]
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]
+          [[ "$BUILD" =~ ^[0-9]+$ ]]
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
+          [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
+          [[ "$SIZE" =~ ^[0-9]+$ ]]
+          if [[ "$OPERATION" == publish ]]; then test -n "$NOTES"; fi
+      - name: Download staged artifact from the named run
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: ${{ inputs.artifact_name }}
           run-id: ${{ inputs.artifact_run_id }}
+          repository: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: /tmp/stage
-      - name: Ensure single IPA
+      - name: Ensure exactly one IPA
         run: |
           set -euo pipefail
-          test "$(find /tmp/stage -name '*.ipa' | wc -l)" -eq 1
-      - name: Validate IPA
+          test "$(find /tmp/stage -type f -name '*.ipa' | wc -l | tr -d ' ')" -eq 1
+          IPA_PATH="$(find /tmp/stage -type f -name '*.ipa' -print -quit)"
+          printf 'IPA_PATH=%s\n' "$IPA_PATH" >> "$GITHUB_ENV"
+      - name: Validate IPA metadata
         env:
           BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
-        run: python scripts/validate_ipa.py /tmp/stage/*.ipa --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
+        run: python scripts/validate_ipa.py "$IPA_PATH" --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
       - name: Security scan
-        run: python scripts/scan_ipa.py /tmp/stage/*.ipa
+        run: python scripts/scan_ipa.py "$IPA_PATH"
       - name: Verify checksum and size
         env:
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
-        run: |
-          python - << 'PY'
-          import hashlib, os, glob
-          ipa=glob.glob('/tmp/stage/*.ipa')[0]
-          sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
-          size=os.path.getsize(ipa)
-          assert sha==os.environ['SHA'], f"sha mismatch {sha}"
-          assert str(size)==os.environ['SIZE'], f"size mismatch {size}"
-          print("verified", sha, size)
-          PY
+        run: python scripts/verify_file.py "$IPA_PATH" --sha256 "$SHA" --size "$SIZE"
+      - name: Preflight least-privilege source-update token
+        if: inputs.operation == 'publish'
+        id: source-update-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          app-id: ${{ secrets.SOURCE_UPDATE_APP_ID }}
+          private-key: ${{ secrets.SOURCE_UPDATE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Confirm source-update token repository access
+        if: inputs.operation == 'publish'
+        env:
+          GH_TOKEN: ${{ steps.source-update-token.outputs.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
+
   publish:
+    if: inputs.operation == 'publish'
     needs: validate
     runs-on: ubuntu-latest
     environment: release-approval
     permissions:
       contents: write
-      pages: write
-      id-token: write
+      actions: read
     steps:
+      - name: Create least-privilege source-update token
+        id: source-update-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
+        with:
+          app-id: ${{ secrets.SOURCE_UPDATE_APP_ID }}
+          private-key: ${{ secrets.SOURCE_UPDATE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-pull-requests: write
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          token: ${{ steps.source-update-token.outputs.token }}
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with: { python-version: "3.11" }
-      - name: Download staged artifact
+      - name: Download staged artifact from the named run
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: ${{ inputs.artifact_name }}
           run-id: ${{ inputs.artifact_run_id }}
+          repository: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: /tmp/stage
-      - name: Reverify checksum and size
+      - name: Revalidate exactly one IPA, metadata, checksum, and size
         env:
+          BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
         run: |
-          python - << 'PY'
-          import hashlib, os, glob
-          ipa=glob.glob('/tmp/stage/*.ipa')[0]
-          sha=hashlib.sha256(open(ipa,'rb').read()).hexdigest()
-          size=os.path.getsize(ipa)
-          assert sha==os.environ['SHA']
-          assert str(size)==os.environ['SIZE']
-          print("reverified", sha, size)
-          PY
+          set -euo pipefail
+          test "$(find /tmp/stage -type f -name '*.ipa' | wc -l | tr -d ' ')" -eq 1
+          IPA_PATH="$(find /tmp/stage -type f -name '*.ipa' -print -quit)"
+          python scripts/validate_ipa.py "$IPA_PATH" --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
+          python scripts/scan_ipa.py "$IPA_PATH"
+          python scripts/verify_file.py "$IPA_PATH" --sha256 "$SHA" --size "$SIZE"
+          printf 'IPA_PATH=%s\n' "$IPA_PATH" >> "$GITHUB_ENV"
       - name: Check duplicate tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           TAG="${APP}-v${VERSION}-b${BUILD}"
-          if gh release view "$TAG" --repo ${{ github.repository }} >/dev/null 2>&1; then
-            echo "duplicate tag $TAG"; exit 1
+          if gh release view "$TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
+            echo "duplicate tag $TAG" >&2
+            exit 1
           fi
-      - name: Create release
+      - name: Create public beta release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
           NOTES: ${{ inputs.release_notes }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           TAG="${APP}-v${VERSION}-b${BUILD}"
-          ASSET="/tmp/stage/$(ls /tmp/stage/*.ipa | xargs -n1 basename)"
-          gh release create "$TAG" "$ASSET" --repo ${{ github.repository }} --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
-      - name: Update source.json via PR
+          gh release create "$TAG" "$IPA_PATH" --repo "$REPOSITORY" \
+            --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
+          ASSET="$(basename "$IPA_PATH")"
+          printf 'RELEASE_TAG=%s\nRELEASE_ASSET=%s\n' "$TAG" "$ASSET" >> "$GITHUB_ENV"
+      - name: Verify public IPA bytes without authentication
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
+        run: |
+          URL="https://github.com/$REPOSITORY/releases/download/$RELEASE_TAG/$RELEASE_ASSET"
+          env -u GH_TOKEN -u GITHUB_TOKEN python scripts/verify_asset.py "$URL" --sha256 "$SHA" --size "$SIZE" --attempts 12 --interval 5
+      - name: Update source.json via protected PR
+        env:
+          GH_TOKEN: ${{ steps.source-update-token.outputs.token }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
           SIZE: ${{ inputs.expected_size }}
-          TAG: ${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}
         run: |
           set -euo pipefail
-          ASSET="$(ls /tmp/stage/*.ipa | xargs -n1 basename)"
-          python scripts/update_source.py --app "$APP" --version "$VERSION" --build "$BUILD" --size "$SIZE" --tag "$TAG" --asset "$ASSET"
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          python scripts/update_source.py --app "$APP" --version "$VERSION" --build "$BUILD" \
+            --size "$SIZE" --tag "$RELEASE_TAG" --asset "$RELEASE_ASSET"
+          git config user.name "source-update[bot]"
+          git config user.email "source-update[bot]@users.noreply.github.com"
           BRANCH="source-update-${APP}-${VERSION}-b${BUILD}"
           git checkout -b "$BRANCH"
           git add source.json
           git commit -m "Update source for $APP $VERSION build $BUILD"
           git push origin "$BRANCH"
-          gh pr create --base main --head "$BRANCH" --title "Source update: $APP $VERSION build $BUILD" --body "Automated source update after approved release."
-      - name: Awaiting source-update PR merge
-        run: echo "Source-update PR created. Merge it to trigger Pages deployment and live verification."
+          gh pr create --repo "${{ github.repository }}" --base main --head "$BRANCH" \
+            --title "Source update: $APP $VERSION build $BUILD" \
+            --body "Automated source update after approved release. The release asset was fetched without authentication and matched the approved SHA-256 and size."
+      - name: Await source-update PR review and merge
+        run: echo "Source-update PR created. Merge it normally; no branch-protection or environment bypass is used."

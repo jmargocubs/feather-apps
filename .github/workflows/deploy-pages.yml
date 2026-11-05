@@ -16,18 +16,10 @@ jobs:
     environment:
       name: github-pages
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: actions/configure-pages@983d7736d9b0ae728b8108732fe4c690d97cc09e
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e574736d1d65fa9c
         with: { path: "." }
       - uses: actions/deploy-pages@d65d3494d20208497995b339078e3772e375a917
       - name: Verify live source matches committed source
-        run: |
-          python - << 'PY'
-          import json, urllib.request
-          local=json.load(open('source.json'))
-          live=json.load(urllib.request.urlopen('https://jmargocubs.github.io/feather-apps/source.json'))
-          assert local==live, "live source differs from committed source"
-          print("live source matches committed source")
-          PY
-
+        run: python scripts/verify_live.py --expected-source source.json --attempts 30 --interval 10 --timeout 15

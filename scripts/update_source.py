@@ -5,7 +5,7 @@ from datetime import date
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--source",default="source.json")
-    ap.add_argument("--app",required=True)
+    ap.add_argument("--app",required=True,choices=("kyro", "zepzi"))
     ap.add_argument("--version",required=True)
     ap.add_argument("--build",required=True)
     ap.add_argument("--size",type=int,required=True)
