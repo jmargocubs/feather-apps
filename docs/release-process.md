@@ -66,8 +66,30 @@ malformed, and successful-but-stale JSON responses for up to five minutes.
 ## Current repository controls
 
 The `release-approval` environment requires reviewer `jmargocubs` and currently has administrator
-bypass disabled (`can_admins_bypass=false`). No main-branch protection rule or ruleset is currently
-configured; the workflow still uses a PR and never pushes `source.json` directly to `main`.
+bypass disabled (`can_admins_bypass=false`). Its selected deployment branch is exactly `main`, and
+the workflow independently rejects `operation=publish` unless `GITHUB_REF` is `refs/heads/main`.
+No repository-wide branch protection rule or ruleset is configured; the workflow still uses a PR
+and never pushes `source.json` directly to `main`.
+
+## Recover after a partial publish
+
+Re-run the exact publish command with the same version, build, artifact run ID, artifact name,
+SHA-256, size, and release notes:
+
+```sh
+gh workflow run publish-beta.yml --ref main \
+  -f operation=publish -f app=kyro -f version=1.0.0 -f build=22 \
+  -f artifact_run_id=RUN_ID -f artifact_name=kyro-ipa-candidate \
+  -f expected_sha256=SHA256 -f expected_size=SIZE_BYTES \
+  -f release_notes='Approved beta notes'
+```
+
+If the public tag already exists, the workflow does not modify it. It requires exactly one IPA
+asset with the expected name, uploaded state, size, digest when GitHub supplies one, downloaded
+SHA-256, and app metadata. It then resumes public-asset verification and source-update PR creation.
+An exact source entry or matching open PR is treated as success; a matching closed PR is reopened.
+Any existing release, source entry, or recovery branch that differs from the approved values is
+rejected without overwriting or deleting it.
 
 ## Rollback
 

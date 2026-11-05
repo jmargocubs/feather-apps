@@ -21,6 +21,7 @@ def load_module(name, path):
 
 
 verify_live = load_module("verify_live", ROOT / "scripts" / "verify_live.py")
+validate_release = load_module("validate_release", ROOT / "scripts" / "validate_release.py")
 
 
 class JsonResponse:
@@ -65,6 +66,48 @@ class WorkflowIntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0, "unknown app was accepted")
 
+    def test_recovery_accepts_exact_release_and_rejects_mismatched_asset(self):
+        digest = "a" * 64
+        release = {
+            "tag_name": "kyro-v1.0.0-b22",
+            "draft": False,
+            "assets": [{
+                "name": "kyro.ipa", "state": "uploaded", "size": 123,
+                "digest": f"sha256:{digest}",
+                "browser_download_url": "https://example.test/kyro.ipa",
+            }],
+        }
+        url = validate_release.validate_release(
+            release, "kyro-v1.0.0-b22", "kyro.ipa", digest, 123
+        )
+        self.assertEqual(url, "https://example.test/kyro.ipa")
+        mismatched = json.loads(json.dumps(release))
+        mismatched["assets"][0]["name"] = "different.ipa"
+        with self.assertRaisesRegex(ValueError, "asset mismatch"):
+            validate_release.validate_release(
+                mismatched, "kyro-v1.0.0-b22", "kyro.ipa", digest, 123
+            )
+
+    def test_repeated_source_recovery_is_idempotent_and_mismatch_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = pathlib.Path(directory) / "source.json"
+            shutil.copy(ROOT / "source.json", source)
+            common = (
+                "--source", source, "--app", "kyro", "--version", "8.8.8",
+                "--build", "888", "--size", "123", "--tag", "kyro-v8.8.8-b888",
+                "--asset", "kyro.ipa", "--date", "2026-11-05",
+            )
+            first = self.run_script("update_source.py", "--idempotent", *common)
+            self.assertEqual(first.returncode, 0, first.stderr)
+            before = source.read_bytes()
+            retry = self.run_script("update_source.py", "--idempotent", *common)
+            self.assertEqual(retry.returncode, 0, retry.stderr)
+            self.assertEqual(source.read_bytes(), before, "retry changed an already exact source entry")
+            mismatched = list(common)
+            mismatched[mismatched.index("123")] = "124"
+            rejected = self.run_script("update_source.py", "--idempotent", *mismatched)
+            self.assertNotEqual(rejected.returncode, 0, "mismatched recovery was accepted")
+
     def test_pages_retry_treats_successful_stale_json_as_failure_then_converges(self):
         expected = {"version": 2}
         responses = iter((JsonResponse({"version": 1}), JsonResponse(expected)))
@@ -104,6 +147,9 @@ class WorkflowIntegrationTests(unittest.TestCase):
         self.assertEqual(workflow.count("run-id: ${{ inputs.artifact_run_id }}"), 2)
         self.assertEqual(workflow.count("github-token: ${{ secrets.GITHUB_TOKEN }}"), 2)
         self.assertIn("actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510", workflow)
+        self.assertIn("github.ref == 'refs/heads/main'", workflow)
+        self.assertIn("Create or resume exact public beta release", workflow)
+        self.assertIn("matching source-update PR already exists", workflow)
 
 
 if __name__ == "__main__":

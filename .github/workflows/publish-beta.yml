@@ -141,7 +141,13 @@ jobs:
           [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
           [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
           [[ "$SIZE" =~ ^[0-9]+$ ]]
-          if [[ "$OPERATION" == publish ]]; then test -n "$NOTES"; fi
+          if [[ "$OPERATION" == publish ]]; then
+            test -n "$NOTES"
+            if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+              echo "publish is restricted to refs/heads/main (got $GITHUB_REF)" >&2
+              exit 1
+            fi
+          fi
       - name: Download staged artifact from the named run
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
@@ -188,7 +194,7 @@ jobs:
         run: test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 
   publish:
-    if: inputs.operation == 'publish'
+    if: inputs.operation == 'publish' && github.ref == 'refs/heads/main'
     needs: validate
     runs-on: ubuntu-latest
     environment: release-approval
@@ -234,21 +240,7 @@ jobs:
           python scripts/scan_ipa.py "$IPA_PATH"
           python scripts/verify_file.py "$IPA_PATH" --sha256 "$SHA" --size "$SIZE"
           printf 'IPA_PATH=%s\n' "$IPA_PATH" >> "$GITHUB_ENV"
-      - name: Check duplicate tag
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APP: ${{ inputs.app }}
-          VERSION: ${{ inputs.version }}
-          BUILD: ${{ inputs.build }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          TAG="${APP}-v${VERSION}-b${BUILD}"
-          if gh release view "$TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
-            echo "duplicate tag $TAG" >&2
-            exit 1
-          fi
-      - name: Create public beta release
+      - name: Create or resume exact public beta release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP: ${{ inputs.app }}
@@ -256,22 +248,45 @@ jobs:
           BUILD: ${{ inputs.build }}
           NOTES: ${{ inputs.release_notes }}
           REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          TAG="${APP}-v${VERSION}-b${BUILD}"
-          gh release create "$TAG" "$IPA_PATH" --repo "$REPOSITORY" \
-            --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
-          ASSET="$(basename "$IPA_PATH")"
-          printf 'RELEASE_TAG=%s\nRELEASE_ASSET=%s\n' "$TAG" "$ASSET" >> "$GITHUB_ENV"
-      - name: Verify public IPA bytes without authentication
-        env:
-          REPOSITORY: ${{ github.repository }}
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
         run: |
+          set -euo pipefail
+          TAG="${APP}-v${VERSION}-b${BUILD}"
+          ASSET="$(basename "$IPA_PATH")"
+          ERROR_FILE="$(mktemp)"
+          if gh api "repos/$REPOSITORY/releases/tags/$TAG" > /tmp/public-release.json 2>"$ERROR_FILE"; then
+            echo "Resuming existing public release $TAG"
+          elif grep -q '(HTTP 404)' "$ERROR_FILE"; then
+            gh release create "$TAG" "$IPA_PATH" --repo "$REPOSITORY" \
+              --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
+            gh api "repos/$REPOSITORY/releases/tags/$TAG" > /tmp/public-release.json
+          else
+            cat "$ERROR_FILE" >&2
+            exit 1
+          fi
+          python scripts/validate_release.py /tmp/public-release.json \
+            --tag "$TAG" --asset "$ASSET" --sha256 "$SHA" --size "$SIZE"
+          RELEASE_DATE="$(jq -er '.published_at[0:10]' /tmp/public-release.json)"
+          printf 'RELEASE_TAG=%s\nRELEASE_ASSET=%s\nRELEASE_DATE=%s\n' \
+            "$TAG" "$ASSET" "$RELEASE_DATE" >> "$GITHUB_ENV"
+      - name: Verify public IPA bytes and app metadata without authentication
+        env:
+          REPOSITORY: ${{ github.repository }}
+          BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
+          VERSION: ${{ inputs.version }}
+          BUILD: ${{ inputs.build }}
+          SHA: ${{ inputs.expected_sha256 }}
+          SIZE: ${{ inputs.expected_size }}
+        run: |
+          set -euo pipefail
           URL="https://github.com/$REPOSITORY/releases/download/$RELEASE_TAG/$RELEASE_ASSET"
-          env -u GH_TOKEN -u GITHUB_TOKEN python scripts/verify_asset.py "$URL" --sha256 "$SHA" --size "$SIZE" --attempts 12 --interval 5
-      - name: Update source.json via protected PR
+          env -u GH_TOKEN -u GITHUB_TOKEN python scripts/verify_asset.py "$URL" \
+            --sha256 "$SHA" --size "$SIZE" --attempts 12 --interval 5 \
+            --output /tmp/public-release.ipa
+          python scripts/validate_ipa.py /tmp/public-release.ipa --bundle "$BUNDLE" \
+            --version "$VERSION" --build "$BUILD" --minos 18.0
+      - name: Create or resume source-update PR
         env:
           GH_TOKEN: ${{ steps.source-update-token.outputs.token }}
           APP: ${{ inputs.app }}
@@ -280,17 +295,47 @@ jobs:
           SIZE: ${{ inputs.expected_size }}
         run: |
           set -euo pipefail
-          python scripts/update_source.py --app "$APP" --version "$VERSION" --build "$BUILD" \
-            --size "$SIZE" --tag "$RELEASE_TAG" --asset "$RELEASE_ASSET"
+          python scripts/update_source.py --idempotent --app "$APP" --version "$VERSION" \
+            --build "$BUILD" --size "$SIZE" --tag "$RELEASE_TAG" --asset "$RELEASE_ASSET" \
+            --date "$RELEASE_DATE"
+          if git diff --quiet -- source.json; then
+            echo "source.json already contains the exact release entry; recovery is complete"
+            exit 0
+          fi
           git config user.name "source-update[bot]"
           git config user.email "source-update[bot]@users.noreply.github.com"
           BRANCH="source-update-${APP}-${VERSION}-b${BUILD}"
-          git checkout -b "$BRANCH"
-          git add source.json
-          git commit -m "Update source for $APP $VERSION build $BUILD"
-          git push origin "$BRANCH"
+          PRS="$(gh pr list --repo "${{ github.repository }}" --base main --head "$BRANCH" \
+            --state all --limit 10 --json number,url,state,mergedAt)"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH"
+            git show FETCH_HEAD:source.json > /tmp/existing-source.json
+            if ! cmp -s source.json /tmp/existing-source.json; then
+              echo "existing recovery branch does not contain the exact expected source.json" >&2
+              exit 1
+            fi
+            OPEN_URL="$(jq -r '[.[] | select(.state == "OPEN")][0].url // empty' <<<"$PRS")"
+            if [[ -n "$OPEN_URL" ]]; then
+              echo "matching source-update PR already exists: $OPEN_URL"
+              exit 0
+            fi
+            CLOSED_NUMBER="$(jq -r '[.[] | select(.state == "CLOSED" and .mergedAt == null)][0].number // empty' <<<"$PRS")"
+            if [[ -n "$CLOSED_NUMBER" ]]; then
+              gh pr reopen "$CLOSED_NUMBER" --repo "${{ github.repository }}"
+              exit 0
+            fi
+            if jq -e 'any(.[]; .mergedAt != null)' <<<"$PRS" >/dev/null; then
+              echo "source-update PR was merged but main lacks the expected source entry" >&2
+              exit 1
+            fi
+          else
+            git checkout -b "$BRANCH"
+            git add source.json
+            git commit -m "Update source for $APP $VERSION build $BUILD"
+            git push origin "$BRANCH"
+          fi
           gh pr create --repo "${{ github.repository }}" --base main --head "$BRANCH" \
-            --title "Source update: $APP $VERSION build $BUILD" \
-            --body "Automated source update after approved release. The release asset was fetched without authentication and matched the approved SHA-256 and size."
+              --title "Source update: $APP $VERSION build $BUILD" \
+              --body "Automated source update after approved release. The release asset was fetched without authentication and matched the approved SHA-256, size, and app metadata."
       - name: Await source-update PR review and merge
         run: echo "Source-update PR created. Merge it normally; no branch-protection or environment bypass is used."
