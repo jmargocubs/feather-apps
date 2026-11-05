@@ -1,0 +1,18 @@
+name: Stage IPA
+on:
+  workflow_dispatch:
+    inputs:
+      app: { description: "kyro or zepzi", required: true, type: choice, options: [kyro, zepzi] }
+permissions:
+  contents: read
+  actions: write
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        with:
+          name: ${{ inputs.app }}-ipa-candidate
+          path: ${{ inputs.app }}.ipa
+          retention-days: 7
