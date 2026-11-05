@@ -17,9 +17,9 @@ jobs:
       name: github-pages
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: actions/configure-pages@983d7736d9b0ae728b8108732fe4c690d97cc09e
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e574736d1d65fa9c
+      - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with: { path: "." }
-      - uses: actions/deploy-pages@d65d3494d20208497995b339078e3772e375a917
+      - uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
       - name: Verify live source matches committed source
         run: python scripts/verify_live.py --expected-source source.json --attempts 30 --interval 10 --timeout 15
