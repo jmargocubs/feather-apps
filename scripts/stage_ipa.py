@@ -10,7 +10,6 @@ import re
 import subprocess
 import sys
 import time
-import urllib.parse
 import uuid
 
 
@@ -145,43 +144,33 @@ def main():
 
     request_id = uuid.uuid4().hex[:12]
     tag = f"staging-{args.app}-{request_id}"
-    payload = {
-        "tag_name": tag,
-        "target_commitish": "main",
-        "name": f"Temporary IPA staging {request_id}",
-        "body": "Temporary authenticated transport for Publish Beta staging; never publish.",
-        "draft": True,
-        "prerelease": False,
-    }
-    created = run(
+    run(
         "gh",
-        "api",
-        "--method",
-        "POST",
-        f"repos/{args.repo}/releases",
-        "--input",
-        "-",
-        input_bytes=json.dumps(payload).encode(),
+        "release",
+        "create",
+        tag,
+        str(ipa),
+        "--repo",
+        args.repo,
+        "--draft",
+        "--target",
+        "main",
+        "--title",
+        f"Temporary IPA staging {request_id}",
+        "--notes",
+        "Temporary authenticated transport for Publish Beta staging; never publish.",
     )
-    release = json.loads(created.stdout.decode())
+    releases = gh_json("api", f"repos/{args.repo}/releases?per_page=100")
+    matches = [item for item in releases if item["tag_name"] == tag and item["draft"]]
+    if len(matches) != 1:
+        raise RuntimeError(f"expected one draft release for {tag}, found {len(matches)}")
+    release = matches[0]
     release_id = release["id"]
     try:
-        asset_name = f"{args.app}.ipa"
-        endpoint = f"repos/{args.repo}/releases/{release_id}/assets?name={urllib.parse.quote(asset_name)}"
-        uploaded = run(
-            "gh",
-            "api",
-            "--hostname",
-            "uploads.github.com",
-            "--method",
-            "POST",
-            endpoint,
-            "-H",
-            "Content-Type: application/octet-stream",
-            "--input",
-            str(ipa),
-        )
-        asset = json.loads(uploaded.stdout)
+        assets = [item for item in release["assets"] if item["name"] == ipa.name]
+        if len(assets) != 1:
+            raise RuntimeError(f"expected one uploaded asset named {ipa.name}, found {len(assets)}")
+        asset = assets[0]
 
         run(
             "gh",

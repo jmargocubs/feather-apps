@@ -2,7 +2,8 @@
 
 The `Publish Beta` workflow has three explicit operations: `stage`, `validate`, and `publish`.
 The IPA is never committed to Git. Staging uses documented GitHub interfaces: the local helper
-calls `gh api` to create and upload an authenticated **draft** release asset, then calls
+calls the supported `gh release create --draft` flow to upload an authenticated **draft** release
+asset, then calls
 `gh workflow run` to dispatch `Publish Beta` in `stage` mode. The runner verifies those exact
 bytes, creates a seven-day immutable Actions artifact with `actions/upload-artifact`, and deletes
 the temporary draft release. A draft must never be published.
