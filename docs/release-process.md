@@ -3,14 +3,14 @@
 
 ## Operator guide (future releases)
 1. Build/test IPA locally.
-2. Upload IPA to a draft RC release: gh release create <rc-tag> <ipa> --draft
+2. Upload IPA to a GitHub Actions artifact: gh workflow run stage-ipa.yml (or gh run upload-artifact) with the approved IPA
 3. Run workflow "Publish Beta" with app/version/build/rc_tag/expected_sha256/expected_size/release_notes.
 4. Approve the release-approval environment gate.
 5. Workflow creates tagged release, updates source.json, deploys Pages, verifies.
 6. On failure, restore last known-good source.json from git and re-deploy Pages.
 
 ## Staging (GitHub Actions artifacts)
-Build/test IPA locally, then upload via `gh run upload-artifact` or workflow_dispatch with artifact ID. Record artifact ID, SHA-256, size, bundle, version, build. Draft GitHub Releases are NOT used for staging (unverified privacy). Artifact retention and access controlled by GitHub Actions permissions.
+Build/test IPA locally, then upload via GitHub Actions artifact (gh run upload-artifact or a staging workflow) with a known artifact name. Record artifact ID, SHA-256, size, bundle, version, build. Record artifact ID, SHA-256, size, bundle, version, build. Draft GitHub Releases are NOT used for staging (unverified privacy). Artifact retention and access controlled by GitHub Actions permissions.
 
 ## Approval gate
 release-approval environment requires reviewer jmargocubs on main branch. Administrator bypass currently enabled (can_admins_bypass=true). Disabling requires explicit authorization; consequence: even admins must obtain reviewer approval, no self-bypass.

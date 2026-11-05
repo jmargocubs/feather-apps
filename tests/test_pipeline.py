@@ -19,5 +19,6 @@ assert r.returncode!=0, "duplicate not rejected"
 # date check
 d=json.load(open(os.path.join(tmp,"source.json")))
 versions=[v for a in d["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro" for v in a["versions"] if v["version"]=="9.9.9"]
-assert versions and versions[0]["date"]!= "2026-11-04" or True
+from datetime import date
+assert versions and versions[0]["date"] == date.today().isoformat(), "date should be today"
 print("tests passed")

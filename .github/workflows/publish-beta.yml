@@ -147,6 +147,5 @@ jobs:
           git commit -m "Update source for $APP $VERSION build $BUILD"
           git push origin "$BRANCH"
           gh pr create --base main --head "$BRANCH" --title "Source update: $APP $VERSION build $BUILD" --body "Automated source update after approved release."
-      - name: Verify live source
-        run: |
-          python scripts/verify_live.py --app ${{ inputs.app }} --bundle "${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}" --version ${{ inputs.version }} --build ${{ inputs.build }} --size ${{ inputs.expected_size }} --ipa-url "https://github.com/jmargocubs/feather-apps/releases/download/${{ inputs.app }}-v${{ inputs.version }}-b${{ inputs.build }}/$(ls /tmp/stage/*.ipa | xargs -n1 basename)"
+      - name: Awaiting source-update PR merge
+        run: echo "Source-update PR created. Merge it to trigger Pages deployment and live verification."
