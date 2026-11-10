@@ -56,8 +56,16 @@
       "localizedDescription": "Sunny Meadow is a calm, private iPhone app for mood check-ins and Recovery Journeys. Track how you feel, keep gentle recovery journeys with your own intention, and watch a Living Tree grow as you show up. Personal data stays on your device. This beta build is unsigned; testers must use their own signing setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/sunnymeadow/icon.png",
       "tintColor": "#EA580C",
-      "size": 81169998,
+      "size": 81160111,
       "versions": [
+        {
+          "version": "0.3.0",
+          "buildVersion": "11",
+          "date": "2026-11-10",
+          "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/sunnymeadow-v0.3.0-b11/sunnymeadow.ipa",
+          "size": 81160111,
+          "minOSVersion": "17.0"
+        },
         {
           "version": "0.3.0",
           "buildVersion": "10",
