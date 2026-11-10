@@ -10,10 +10,10 @@ on:
         type: choice
         options: [stage, validate, publish]
       app:
-        description: "kyro or zepzi"
+        description: "kyro, zepzi, or sunnymeadow"
         required: true
         type: choice
-        options: [kyro, zepzi]
+        options: [kyro, zepzi, sunnymeadow]
       version: { description: "app version (validate/publish)", required: false }
       build: { description: "app build (validate/publish)", required: false }
       release_notes: { description: "release notes (publish)", required: false }
@@ -48,7 +48,7 @@ jobs:
           LOCATOR: ${{ inputs.staging_locator }}
         run: |
           set -euo pipefail
-          [[ "$APP" =~ ^(kyro|zepzi)$ ]]
+          [[ "$APP" =~ ^(kyro|zepzi|sunnymeadow)$ ]]
           [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
           [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
           [[ "$SIZE" =~ ^[0-9]+$ ]]
@@ -134,7 +134,7 @@ jobs:
           SIZE: ${{ inputs.expected_size }}
         run: |
           set -euo pipefail
-          [[ "$APP" =~ ^(kyro|zepzi)$ ]]
+          [[ "$APP" =~ ^(kyro|zepzi|sunnymeadow)$ ]]
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]
           [[ "$BUILD" =~ ^[0-9]+$ ]]
           [[ "$RUN_ID" =~ ^[0-9]+$ ]]
@@ -162,12 +162,21 @@ jobs:
           test "$(find /tmp/stage -type f -name '*.ipa' | wc -l | tr -d ' ')" -eq 1
           IPA_PATH="$(find /tmp/stage -type f -name '*.ipa' -print -quit)"
           printf 'IPA_PATH=%s\n' "$IPA_PATH" >> "$GITHUB_ENV"
+      - name: Resolve app metadata
+        id: appmeta
+        env:
+          APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          echo "bundle=$(python scripts/apps.py bundle "$APP")" >> "$GITHUB_OUTPUT"
+          echo "minos=$(python scripts/apps.py minos "$APP")" >> "$GITHUB_OUTPUT"
       - name: Validate IPA metadata
         env:
-          BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
+          BUNDLE: ${{ steps.appmeta.outputs.bundle }}
+          MINOS: ${{ steps.appmeta.outputs.minos }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
-        run: python scripts/validate_ipa.py "$IPA_PATH" --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
+        run: python scripts/validate_ipa.py "$IPA_PATH" --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos "$MINOS"
       - name: Security scan
         run: python scripts/scan_ipa.py "$IPA_PATH"
       - name: Verify checksum and size
@@ -225,9 +234,18 @@ jobs:
           repository: ${{ github.repository }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: /tmp/stage
+      - name: Resolve app metadata
+        id: appmeta
+        env:
+          APP: ${{ inputs.app }}
+        run: |
+          set -euo pipefail
+          echo "bundle=$(python scripts/apps.py bundle "$APP")" >> "$GITHUB_OUTPUT"
+          echo "minos=$(python scripts/apps.py minos "$APP")" >> "$GITHUB_OUTPUT"
       - name: Revalidate exactly one IPA, metadata, checksum, and size
         env:
-          BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
+          BUNDLE: ${{ steps.appmeta.outputs.bundle }}
+          MINOS: ${{ steps.appmeta.outputs.minos }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
           SHA: ${{ inputs.expected_sha256 }}
@@ -236,7 +254,7 @@ jobs:
           set -euo pipefail
           test "$(find /tmp/stage -type f -name '*.ipa' | wc -l | tr -d ' ')" -eq 1
           IPA_PATH="$(find /tmp/stage -type f -name '*.ipa' -print -quit)"
-          python scripts/validate_ipa.py "$IPA_PATH" --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos 18.0
+          python scripts/validate_ipa.py "$IPA_PATH" --bundle "$BUNDLE" --version "$VERSION" --build "$BUILD" --minos "$MINOS"
           python scripts/scan_ipa.py "$IPA_PATH"
           python scripts/verify_file.py "$IPA_PATH" --sha256 "$SHA" --size "$SIZE"
           printf 'IPA_PATH=%s\n' "$IPA_PATH" >> "$GITHUB_ENV"
@@ -273,7 +291,8 @@ jobs:
       - name: Verify public IPA bytes and app metadata without authentication
         env:
           REPOSITORY: ${{ github.repository }}
-          BUNDLE: ${{ inputs.app == 'kyro' && 'com.cubbiestream.kyro' || 'app.flippy.reader' }}
+          BUNDLE: ${{ steps.appmeta.outputs.bundle }}
+          MINOS: ${{ steps.appmeta.outputs.minos }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
           SHA: ${{ inputs.expected_sha256 }}
@@ -285,7 +304,7 @@ jobs:
             --sha256 "$SHA" --size "$SIZE" --attempts 12 --interval 5 \
             --output /tmp/public-release.ipa
           python scripts/validate_ipa.py /tmp/public-release.ipa --bundle "$BUNDLE" \
-            --version "$VERSION" --build "$BUILD" --minos 18.0
+            --version "$VERSION" --build "$BUILD" --minos "$MINOS"
       - name: Create or resume source-update PR
         env:
           GH_TOKEN: ${{ steps.source-update-token.outputs.token }}
