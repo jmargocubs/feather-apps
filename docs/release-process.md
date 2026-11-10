@@ -97,3 +97,18 @@ Restore the last known-good `source.json` through a normal PR and redeploy Pages
 replace an existing public release asset. A failed staging helper deletes its temporary draft when
 possible; if interrupted, delete the still-draft `staging-*` release with authenticated GitHub UI
 or API access, and never publish it.
+
+
+## Sunny Meadow
+
+Sunny Meadow uses the same stage → validate → publish flow. App id is `sunnymeadow`,
+bundle id is `com.sunnymeadow.app.beta`, and minimum iOS is `17.0`.
+
+```sh
+cd /path/to/feather-apps
+python3 scripts/stage_ipa.py /absolute/path/to/SunnyMeadow-v0.3.0-b9-beta-unsigned.ipa \
+  --app sunnymeadow --version 0.3.0 --build 9
+```
+
+Then validate and publish with `app=sunnymeadow`, the printed artifact run id / name,
+SHA-256, and size. The source-update PR preserves Kyro and Zepzi entries.

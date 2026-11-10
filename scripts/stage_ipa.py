@@ -14,7 +14,8 @@ import uuid
 
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-BUNDLES = {"kyro": "com.cubbiestream.kyro", "zepzi": "app.flippy.reader"}
+sys.path.insert(0, str(ROOT / "scripts"))
+from apps import APP_IDS, APPS, bundle_for, min_os_for  # noqa: E402
 
 
 def run(*args, input_bytes=None, capture=True, check=True):
@@ -90,7 +91,7 @@ def main():
         "Publish Beta in stage mode to create a seven-day Actions artifact."
     )
     parser.add_argument("ipa", type=pathlib.Path)
-    parser.add_argument("--app", required=True, choices=sorted(BUNDLES))
+    parser.add_argument("--app", required=True, choices=list(APP_IDS))
     parser.add_argument("--version", required=True)
     parser.add_argument("--build", required=True)
     parser.add_argument("--repo", default="jmargocubs/feather-apps")
@@ -110,13 +111,13 @@ def main():
         str(ROOT / "scripts" / "validate_ipa.py"),
         str(ipa),
         "--bundle",
-        BUNDLES[args.app],
+        bundle_for(args.app),
         "--version",
         args.version,
         "--build",
         args.build,
         "--minos",
-        "18.0",
+        min_os_for(args.app),
         capture=False,
     )
     run(sys.executable, str(ROOT / "scripts" / "scan_ipa.py"), str(ipa), capture=False)
