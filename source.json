@@ -1,7 +1,7 @@
 {
   "name": "jmargocubs Apps",
-  "subtitle": "Kyro and Zepzi beta builds",
-  "description": "Feather-compatible source for Kyro and Zepzi beta IPAs hosted on GitHub Releases.",
+  "subtitle": "Kyro, Zepzi, and Sunny Meadow beta builds",
+  "description": "Feather-compatible source for Kyro, Zepzi, and Sunny Meadow beta IPAs hosted on GitHub Releases.",
   "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
   "headerURL": null,
   "website": "https://jmargocubs.github.io/feather-apps/",
@@ -47,6 +47,17 @@
           "minOSVersion": "18.0"
         }
       ]
+    },
+    {
+      "name": "Sunny Meadow",
+      "bundleIdentifier": "com.sunnymeadow.app.beta",
+      "developerName": "jmargocubs",
+      "subtitle": "Private recovery and mood journaling",
+      "localizedDescription": "Sunny Meadow is a calm, private iPhone app for mood check-ins and Recovery Journeys. Track how you feel, keep gentle recovery journeys with your own intention, and watch a Living Tree grow as you show up. Personal data stays on your device. This beta build is unsigned; testers must use their own signing setup.",
+      "iconURL": "https://jmargocubs.github.io/feather-apps/assets/sunnymeadow/icon.png",
+      "tintColor": "#EA580C",
+      "size": 0,
+      "versions": []
     }
   ]
 }
