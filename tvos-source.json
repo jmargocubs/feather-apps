@@ -1,33 +1,13 @@
 {
-  "name": "jmargocubs Apps \u2014 Apple TV",
+  "name": "jmargocubs Apps — Apple TV",
   "subtitle": "Kyro Apple TV beta builds",
-  "description": "Feather-compatible tvOS source for Kyro Apple TV beta IPAs hosted on GitHub Releases.",
+  "description": "Nullsign-compatible tvOS source for Kyro Apple TV beta IPAs hosted on GitHub Releases.",
   "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
   "headerURL": null,
   "website": "https://jmargocubs.github.io/feather-apps/",
   "tintColor": "#4F46E5",
   "featuredApps": [],
   "apps": [
-    {
-      "name": "Kyro Apple TV",
-      "bundleIdentifier": "com.cubbiestream.kyro",
-      "developerName": "jmargocubs",
-      "subtitle": "Self-hosted media streaming client for Apple TV",
-      "localizedDescription": "Kyro Apple TV is a tvOS streaming client for self-hosted media libraries, live channels, and Sports Hub features. This unsigned beta requires your own signing and sideloading setup.",
-      "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
-      "tintColor": "#4F46E5",
-      "size": 31035936,
-      "versions": [
-        {
-          "version": "1.0.0",
-          "buildVersion": "85",
-          "date": "2026-11-17",
-          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build85-rc1/Kyro-1.0.0-85-tvos-unsigned-arm64.ipa",
-          "size": 31035936,
-          "minOSVersion": "26.0"
-        }
-      ]
-    },
     {
       "name": "Kyro Apple TV",
       "bundleIdentifier": "com.cubbiestream.kyro.tvos",
@@ -44,6 +24,22 @@
           "date": "2026-11-18",
           "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build87-rc1/Kyro-tvOS-v1.0.0-Build87-Unsigned.ipa",
           "size": 31028642,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.0",
+          "buildVersion": "86",
+          "date": "2026-11-18",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build86-rc1/Kyro-1.0.0-86-tvos-unsigned-arm64.ipa",
+          "size": 31035949,
+          "minOSVersion": "26.0"
+        },
+        {
+          "version": "1.0.0",
+          "buildVersion": "85",
+          "date": "2026-11-17",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build85-rc1/Kyro-1.0.0-85-tvos-unsigned-arm64.ipa",
+          "size": 31035936,
           "minOSVersion": "26.0"
         }
       ]

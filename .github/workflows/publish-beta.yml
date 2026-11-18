@@ -10,10 +10,10 @@ on:
         type: choice
         options: [stage, validate, publish]
       app:
-        description: "kyro, zepzi, or sunnymeadow"
+        description: "kyro, kyro-tvos, zepzi, or sunnymeadow"
         required: true
         type: choice
-        options: [kyro, zepzi, sunnymeadow]
+        options: [kyro, kyro-tvos, zepzi, sunnymeadow]
       version: { description: "app version (validate/publish)", required: false }
       build: { description: "app build (validate/publish)", required: false }
       release_notes: { description: "release notes (publish)", required: false }
@@ -48,7 +48,7 @@ jobs:
           LOCATOR: ${{ inputs.staging_locator }}
         run: |
           set -euo pipefail
-          [[ "$APP" =~ ^(kyro|zepzi|sunnymeadow)$ ]]
+          [[ "$APP" =~ ^(kyro|kyro-tvos|zepzi|sunnymeadow)$ ]]
           [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
           [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
           [[ "$SIZE" =~ ^[0-9]+$ ]]
@@ -134,7 +134,7 @@ jobs:
           SIZE: ${{ inputs.expected_size }}
         run: |
           set -euo pipefail
-          [[ "$APP" =~ ^(kyro|zepzi|sunnymeadow)$ ]]
+          [[ "$APP" =~ ^(kyro|kyro-tvos|zepzi|sunnymeadow)$ ]]
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]
           [[ "$BUILD" =~ ^[0-9]+$ ]]
           [[ "$RUN_ID" =~ ^[0-9]+$ ]]
