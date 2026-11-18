@@ -80,8 +80,16 @@
       "localizedDescription": "Zepzi is a colorful, customizable comic-reading app for iPhone, built for readers who host their collections with Komga. Explore your library, enjoy a smooth reading experience, track your progress, unlock achievements, and personalize your adventure with unique themes.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/zepzi/icon.png",
       "tintColor": "#4F46E5",
-      "size": 7800201,
+      "size": 5954441,
       "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "1",
+          "date": "2026-11-18",
+          "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/zepzi-v1.0.0-b1/zepzi.ipa",
+          "size": 5954441,
+          "minOSVersion": "18.0"
+        },
         {
           "version": "1.0",
           "buildVersion": "1",
