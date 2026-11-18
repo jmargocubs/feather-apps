@@ -1,5 +1,5 @@
 {
-  "name": "jmargocubs Apps — Apple TV",
+  "name": "jmargocubs Apps \u2014 Apple TV",
   "subtitle": "Kyro Apple TV beta builds",
   "description": "Nullsign-compatible tvOS source for Kyro Apple TV beta IPAs hosted on GitHub Releases.",
   "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
@@ -16,8 +16,16 @@
       "localizedDescription": "Kyro Apple TV is a tvOS streaming client for self-hosted media libraries, live channels, and Sports Hub features. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 31028642,
+      "size": 31038756,
       "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "88",
+          "date": "2026-11-18",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build88-rc1/Kyro-tvOS-v1.0.0-Build88-Unsigned.ipa",
+          "size": 31038756,
+          "minOSVersion": "26.0"
+        },
         {
           "version": "1.0.0",
           "buildVersion": "87",
