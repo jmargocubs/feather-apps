@@ -73,20 +73,19 @@ gh workflow run publish-beta.yml --ref main \
   -f release_notes='Approved beta notes'
 ```
 
-The validation job runs before the `release-approval` environment gate. The publishing job has
-its own explicit `actions: read` permission and independently repeats the one-IPA, metadata,
-security, checksum, and size checks. It then creates the public release, downloads the public IPA
-without credentials and verifies the exact SHA-256 and size, and opens a source-update PR using
-the GitHub App token. Merge that PR normally; it triggers **Deploy Pages**, which retries network,
-malformed, and successful-but-stale JSON responses for up to five minutes.
+```
 
-## Current repository controls
+The validation job independently runs the one-IPA, metadata, security, checksum, and size checks.
+The publishing job repeats all validations, creates or resumes the release, downloads the public IPA
+without credentials, verifies the exact SHA-256 and size, and updates source.json and tvos-source.json
+directly on main. Pushing to main triggers **Deploy Pages**, which retries network, malformed, and
+successful-but-stale JSON responses for up to five minutes.
 
-The `release-approval` environment requires reviewer `jmargocubs` and currently has administrator
-bypass disabled (`can_admins_bypass=false`). Its selected deployment branch is exactly `main`, and
-the workflow independently rejects `operation=publish` unless `GITHUB_REF` is `refs/heads/main`.
-No repository-wide branch protection rule or ruleset is configured; the workflow still uses a PR
-and never pushes `source.json` directly to `main`.
+## Fully automated publishing
+
+The release pipeline runs hands-off without manual review gates or PR approvals. All automated
+integrity validations, bundle checks, OS version checks, security scans, downgrade protections,
+and public download verifications remain strictly enforced on every release.
 
 ## Recover after a partial publish
 

@@ -195,7 +195,6 @@ jobs:
     if: inputs.operation == 'publish' && github.ref == 'refs/heads/main'
     needs: validate
     runs-on: ubuntu-latest
-    environment: release-approval
     permissions:
       contents: write
       pull-requests: write
