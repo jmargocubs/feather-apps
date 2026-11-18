@@ -29,6 +29,26 @@
       ]
     },
     {
+      "name": "Kyro Apple TV",
+      "bundleIdentifier": "com.cubbiestream.kyro.tvos",
+      "developerName": "jmargocubs",
+      "subtitle": "Self-hosted media streaming client for Apple TV",
+      "localizedDescription": "Kyro Apple TV is a tvOS streaming client for self-hosted media libraries, live channels, and Sports Hub features. This unsigned beta requires your own signing and sideloading setup.",
+      "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
+      "tintColor": "#4F46E5",
+      "size": 31035949,
+      "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "86",
+          "date": "2026-11-18",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build86-rc1/Kyro-1.0.0-86-tvos-unsigned-arm64.ipa",
+          "size": 31035949,
+          "minOSVersion": "26.0"
+        }
+      ]
+    },
+    {
       "name": "Zepzi",
       "bundleIdentifier": "app.flippy.reader",
       "developerName": "jmargocubs",
