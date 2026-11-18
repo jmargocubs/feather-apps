@@ -1,5 +1,21 @@
 # Beta release process
 
+## Preferred path: Nullsign auto-publish
+
+Standing policy: after a verified unsigned IPA build succeeds, publish immediately with
+`scripts/publish_ipa.py`. Do not wait for a separate approval prompt. Full policy:
+[nullsign-auto-publish.md](nullsign-auto-publish.md).
+
+```sh
+cd /path/to/feather-apps
+python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
+  --app kyro-tvos --version 1.0.0 --build 87
+```
+
+Supported app ids: `kyro`, `kyro-tvos`, `zepzi`, `sunnymeadow`.
+
+## Legacy Actions path: stage / validate / publish
+
 The `Publish Beta` workflow has three explicit operations: `stage`, `validate`, and `publish`.
 The IPA is never committed to Git. Staging uses documented GitHub interfaces: the local helper
 calls the supported `gh release create --draft` flow to upload an authenticated **draft** release
@@ -7,6 +23,9 @@ asset, then calls
 `gh workflow run` to dispatch `Publish Beta` in `stage` mode. The runner verifies those exact
 bytes, creates a seven-day immutable Actions artifact with `actions/upload-artifact`, and deletes
 the temporary draft release. A draft must never be published.
+
+For day-to-day packaging sessions, prefer `publish_ipa.py`. The Actions path remains available
+for audited CI-only releases.
 
 ## One-time authentication setup
 

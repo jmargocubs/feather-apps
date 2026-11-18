@@ -1,31 +1,103 @@
 #!/usr/bin/env python3
-"""Canonical app catalog for Feather beta publishing."""
+"""Canonical app catalog for Nullsign-compatible beta publishing."""
 
 from __future__ import annotations
 
 import json
 import sys
 
+# Hosting:
+# - Kyro iOS / tvOS IPAs live on jmargocubs/Kyro releases.
+# - Zepzi / Sunny Meadow IPAs live on jmargocubs/feather-apps releases.
+# Catalog metadata always lives in jmargocubs/feather-apps source.json
+# (Nullsign / AltStore-compatible).
 APPS = {
     "kyro": {
         "bundle": "com.cubbiestream.kyro",
         "min_os": "18.0",
         "display_name": "Kyro",
+        "platform": "ios",
+        "release_repo": "jmargocubs/Kyro",
+        "tag_template": "kyro-ios-v{version}-build{build}-rc1",
+        "source_name": "Kyro",
+        "subtitle": "Self-hosted media streaming client",
+        "localized_description": (
+            "Kyro is a customized iOS streaming client based on Silo, bringing "
+            "your self-hosted media library together with an enhanced IPTV "
+            "experience and Sports Hub features. Enjoy movies, TV shows, live "
+            "channels, a personalized interface, and more in one app. Built for "
+            "users who want greater control over their streaming experience. "
+            "Sports Hub features are in development."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
+        "tint_color": "#4F46E5",
+        "update_tvos_source": False,
+    },
+    "kyro-tvos": {
+        "bundle": "com.cubbiestream.kyro.tvos",
+        "min_os": "26.0",
+        "display_name": "Kyro Apple TV",
+        "platform": "tvos",
+        "release_repo": "jmargocubs/Kyro",
+        "tag_template": "kyro-tvos-v{version}-build{build}-rc1",
+        "source_name": "Kyro Apple TV",
+        "subtitle": "Self-hosted media streaming client for Apple TV",
+        "localized_description": (
+            "Kyro Apple TV is a tvOS streaming client for self-hosted media "
+            "libraries, live channels, and Sports Hub features. This unsigned "
+            "beta requires your own signing and sideloading setup."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
+        "tint_color": "#4F46E5",
+        "update_tvos_source": True,
     },
     "zepzi": {
         "bundle": "app.flippy.reader",
         "min_os": "18.0",
         "display_name": "Zepzi",
+        "platform": "ios",
+        "release_repo": "jmargocubs/feather-apps",
+        "tag_template": "zepzi-v{version}-b{build}",
+        "source_name": "Zepzi",
+        "subtitle": "Comic reader for Komga",
+        "localized_description": (
+            "Zepzi is a colorful, customizable comic-reading app for iPhone, "
+            "built for readers who host their collections with Komga. Explore "
+            "your library, enjoy a smooth reading experience, track your "
+            "progress, unlock achievements, and personalize your adventure "
+            "with unique themes."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/zepzi/icon.png",
+        "tint_color": "#4F46E5",
+        "update_tvos_source": False,
     },
     "sunnymeadow": {
         "bundle": "com.sunnymeadow.app.beta",
         "min_os": "17.0",
         "display_name": "Sunny Meadow",
+        "platform": "ios",
+        "release_repo": "jmargocubs/feather-apps",
+        "tag_template": "sunnymeadow-v{version}-b{build}",
+        "source_name": "Sunny Meadow",
+        "subtitle": "Private recovery and mood journaling",
+        "localized_description": (
+            "Sunny Meadow is a calm, private iPhone app for mood check-ins and "
+            "Recovery Journeys. Track how you feel, keep gentle recovery "
+            "journeys with your own intention, and watch a Living Tree grow as "
+            "you show up. Personal data stays on your device. This beta build "
+            "is unsigned; testers must use their own signing setup."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/sunnymeadow/icon.png",
+        "tint_color": "#EA580C",
+        "update_tvos_source": False,
     },
 }
 
 APP_IDS = tuple(sorted(APPS))
 APP_CHOICE_RE = "^(?:%s)$" % "|".join(APP_IDS)
+SOURCE_REPO = "jmargocubs/feather-apps"
+SOURCE_URL = "https://jmargocubs.github.io/feather-apps/source.json"
+TVOS_SOURCE_URL = "https://jmargocubs.github.io/feather-apps/tvos-source.json"
 
 
 def bundle_for(app: str) -> str:
@@ -36,10 +108,24 @@ def min_os_for(app: str) -> str:
     return APPS[app]["min_os"]
 
 
+def release_repo_for(app: str) -> str:
+    return APPS[app]["release_repo"]
+
+
+def tag_for(app: str, version: str, build: str) -> str:
+    return APPS[app]["tag_template"].format(version=version, build=build)
+
+
+def download_url_for(app: str, version: str, build: str, asset: str) -> str:
+    tag = tag_for(app, version, build)
+    repo = release_repo_for(app)
+    return f"https://github.com/{repo}/releases/download/{tag}/{asset}"
+
+
 def main(argv: list[str]) -> int:
     if len(argv) == 1 or argv[1] in {"-h", "--help"}:
         print(
-            "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>",
+            "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|tag <app> <version> <build>",
             file=sys.stderr,
         )
         return 2
@@ -53,14 +139,29 @@ def main(argv: list[str]) -> int:
     if cmd == "json":
         print(json.dumps(APPS, indent=2, sort_keys=True))
         return 0
-    if cmd in {"bundle", "minos"} and len(argv) == 3:
+    if cmd in {"bundle", "minos", "repo"} and len(argv) == 3:
         app = argv[2]
         if app not in APPS:
             print(f"unknown app: {app}", file=sys.stderr)
             return 1
-        print(bundle_for(app) if cmd == "bundle" else min_os_for(app))
+        if cmd == "bundle":
+            print(bundle_for(app))
+        elif cmd == "minos":
+            print(min_os_for(app))
+        else:
+            print(release_repo_for(app))
         return 0
-    print("usage: apps.py ids|choice-re|json|bundle <app>|minos <app>", file=sys.stderr)
+    if cmd == "tag" and len(argv) == 5:
+        app, version, build = argv[2], argv[3], argv[4]
+        if app not in APPS:
+            print(f"unknown app: {app}", file=sys.stderr)
+            return 1
+        print(tag_for(app, version, build))
+        return 0
+    print(
+        "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|tag <app> <version> <build>",
+        file=sys.stderr,
+    )
     return 2
 
 
