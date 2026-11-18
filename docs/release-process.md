@@ -30,15 +30,13 @@ for audited CI-only releases.
 ## One-time authentication setup
 
 1. Authenticate the GitHub CLI as a repository administrator: `gh auth login`.
-2. Create a GitHub App installed only on `jmargocubs/feather-apps`, with repository permissions
-   **Contents: Read and write** and **Pull requests: Read and write**. No organization permissions,
-   administration permission, or webhooks are required.
-3. Store its App ID as the Actions secret `SOURCE_UPDATE_APP_ID` and its private key as
-   `SOURCE_UPDATE_APP_PRIVATE_KEY`.
-
-The source-update branch and PR use a short-lived installation token from that app. They do not
-use `GITHUB_TOKEN`: the repository currently has "Allow GitHub Actions to create and approve pull
-requests" disabled. The App token also causes normal pull-request workflows to run.
+2. Ensure repository workflow permissions allow PR creation:
+   **Allow GitHub Actions to create and approve pull requests** enabled.
+3. The automated source-update branch and PR use the built-in `GITHUB_TOKEN` with
+   explicit `contents: write` and `pull-requests: write` permissions. No external
+   GitHub App, key generation, or secret configuration is required.
+4. Source validation and test suites run explicitly prior to committing the updated catalog,
+   and validate upon merge to `main`.
 
 ## Stage from the Mac
 

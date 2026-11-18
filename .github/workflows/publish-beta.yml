@@ -184,21 +184,10 @@ jobs:
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
         run: python scripts/verify_file.py "$IPA_PATH" --sha256 "$SHA" --size "$SIZE"
-      - name: Preflight least-privilege source-update token
-        if: inputs.operation == 'publish'
-        id: source-update-token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
-        with:
-          app-id: ${{ secrets.SOURCE_UPDATE_APP_ID }}
-          private-key: ${{ secrets.SOURCE_UPDATE_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
-          permission-contents: write
-          permission-pull-requests: write
-      - name: Confirm source-update token repository access
+      - name: Confirm repository access
         if: inputs.operation == 'publish'
         env:
-          GH_TOKEN: ${{ steps.source-update-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
         run: test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 
@@ -209,21 +198,12 @@ jobs:
     environment: release-approval
     permissions:
       contents: write
+      pull-requests: write
       actions: read
     steps:
-      - name: Create least-privilege source-update token
-        id: source-update-token
-        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510
-        with:
-          app-id: ${{ secrets.SOURCE_UPDATE_APP_ID }}
-          private-key: ${{ secrets.SOURCE_UPDATE_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
-          permission-contents: write
-          permission-pull-requests: write
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          token: ${{ steps.source-update-token.outputs.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
         with: { python-version: "3.11" }
       - name: Download staged artifact from the named run
@@ -307,7 +287,7 @@ jobs:
             --version "$VERSION" --build "$BUILD" --minos "$MINOS"
       - name: Create or resume source-update PR
         env:
-          GH_TOKEN: ${{ steps.source-update-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
@@ -321,8 +301,10 @@ jobs:
             echo "source.json already contains the exact release entry; recovery is complete"
             exit 0
           fi
-          git config user.name "source-update[bot]"
-          git config user.email "source-update[bot]@users.noreply.github.com"
+          python scripts/validate_source.py source.json
+          python -m unittest discover tests
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           BRANCH="source-update-${APP}-${VERSION}-b${BUILD}"
           PRS="$(gh pr list --repo "${{ github.repository }}" --base main --head "$BRANCH" \
             --state all --limit 10 --json number,url,state,mergedAt)"
