@@ -16,8 +16,16 @@
       "localizedDescription": "Kyro Apple TV is a tvOS streaming client for self-hosted media libraries, live channels, and Sports Hub features. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 31207071,
+      "size": 31266570,
       "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "93",
+          "date": "2026-11-19",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.0-build93-rc1/Kyro-1.0.0-93-tvos-unsigned-arm64.ipa",
+          "size": 31266570,
+          "minOSVersion": "26.0"
+        },
         {
           "version": "1.0.0",
           "buildVersion": "92",
