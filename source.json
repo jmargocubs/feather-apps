@@ -16,8 +16,16 @@
       "localizedDescription": "Kyro is a customized iOS streaming client based on Silo, bringing your self-hosted media library together with an enhanced IPTV experience and Sports Hub features. Enjoy movies, TV shows, live channels, a personalized interface, and more in one app. Built for users who want greater control over their streaming experience. Sports Hub features are in development.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 29280331,
+      "size": 29292642,
       "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "94",
+          "date": "2026-11-19",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-ios-v1.0.0-build94-rc1/Kyro-v1.0.0-Build94-Unsigned.ipa",
+          "size": 29292642,
+          "minOSVersion": "18.0"
+        },
         {
           "version": "1.0.0",
           "buildVersion": "93",
