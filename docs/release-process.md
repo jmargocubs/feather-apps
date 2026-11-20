@@ -1,10 +1,11 @@
 # Beta release process
 
-## Preferred path: Nullsign auto-publish
+## Preferred path: shared source auto-publish
 
 Standing policy: after a verified unsigned IPA build succeeds, publish immediately with
 `scripts/publish_ipa.py`. Do not wait for a separate approval prompt. Full policy:
-[nullsign-auto-publish.md](nullsign-auto-publish.md).
+[nullsign-auto-publish.md](nullsign-auto-publish.md). Listing titles:
+[catalog-listing-names.md](catalog-listing-names.md).
 
 ```sh
 cd /path/to/feather-apps

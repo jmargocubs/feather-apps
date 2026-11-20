@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
-"""Canonical app catalog for Nullsign-compatible beta publishing."""
+"""Canonical app catalog for AltStore-compatible beta publishing."""
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 
 # Hosting:
 # - Kyro iOS / tvOS IPAs live on jmargocubs/Kyro releases.
 # - Zepzi / Sunny Meadow IPAs live on jmargocubs/feather-apps releases.
 # Catalog metadata always lives in jmargocubs/feather-apps source.json
-# (Nullsign / AltStore-compatible).
+# (AltStore-compatible source used by signing / sideloading apps).
+#
+# Listing title vs installed name:
+# - source.json apps[].name is the repository listing title shown by compatible
+#   signing apps. It is generated as "{source_name} — Build {N}".
+# - The name inside the installed IPA (CFBundleDisplayName / bundle display name)
+#   is never rewritten by this catalog.
+LISTING_NAME_SEP = " — Build "
+_LISTING_NAME_RE = re.compile(r"^(?P<base>.+?) — Build (?P<build>\S+)$")
+
 APPS = {
     "kyro": {
         "bundle": "com.cubbiestream.kyro",
@@ -112,6 +122,35 @@ def release_repo_for(app: str) -> str:
     return APPS[app]["release_repo"]
 
 
+def base_name_for(app: str) -> str:
+    """Stable product name used inside docs and as the listing-name stem.
+
+    This is not written into IPA Info.plist; installed app titles stay whatever
+    the binary already ships.
+    """
+    return APPS[app]["source_name"]
+
+
+def catalog_listing_name(app: str, build: str | int) -> str:
+    """Repository listing title: 'App Name — Build N'."""
+    return f"{base_name_for(app)}{LISTING_NAME_SEP}{build}"
+
+
+def parse_catalog_listing_name(name: str) -> tuple[str, str] | None:
+    match = _LISTING_NAME_RE.match(str(name or ""))
+    if not match:
+        return None
+    return match.group("base"), match.group("build")
+
+
+def current_listing_name(app: str, versions: list[dict], fallback_build: str | int) -> str:
+    """Listing title for the current head row (versions[0]) or fallback build."""
+    if versions:
+        head_build = versions[0].get("buildVersion", fallback_build)
+        return catalog_listing_name(app, head_build)
+    return catalog_listing_name(app, fallback_build)
+
+
 def tag_for(app: str, version: str, build: str) -> str:
     return APPS[app]["tag_template"].format(version=version, build=build)
 
@@ -125,7 +164,7 @@ def download_url_for(app: str, version: str, build: str, asset: str) -> str:
 def main(argv: list[str]) -> int:
     if len(argv) == 1 or argv[1] in {"-h", "--help"}:
         print(
-            "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|tag <app> <version> <build>",
+            "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|listing-name <app> <build>|tag <app> <version> <build>",
             file=sys.stderr,
         )
         return 2
@@ -151,6 +190,13 @@ def main(argv: list[str]) -> int:
         else:
             print(release_repo_for(app))
         return 0
+    if cmd == "listing-name" and len(argv) == 4:
+        app, build = argv[2], argv[3]
+        if app not in APPS:
+            print(f"unknown app: {app}", file=sys.stderr)
+            return 1
+        print(catalog_listing_name(app, build))
+        return 0
     if cmd == "tag" and len(argv) == 5:
         app, version, build = argv[2], argv[3], argv[4]
         if app not in APPS:
@@ -159,7 +205,7 @@ def main(argv: list[str]) -> int:
         print(tag_for(app, version, build))
         return 0
     print(
-        "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|tag <app> <version> <build>",
+        "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|listing-name <app> <build>|tag <app> <version> <build>",
         file=sys.stderr,
     )
     return 2

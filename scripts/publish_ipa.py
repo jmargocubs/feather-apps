@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Publish a verified unsigned IPA to Nullsign-compatible GitHub hosting.
+"""Publish a verified unsigned IPA to the shared AltStore-compatible source.
 
 Standing policy: after a successful verified IPA build, run this script. It
 uploads the IPA to the app's release repository, updates feather-apps
 source.json (and tvos-source.json when needed), verifies the public download
 SHA-256, and pushes the catalog update. No separate publish approval is
 required. Failed or unverified builds must not call this script.
+
+Catalog apps[].name is set to "App Name — Build N" for repository listings in
+compatible signing apps. Installed IPA display names are never rewritten here.
 """
 
 from __future__ import annotations
@@ -133,7 +136,7 @@ def create_or_resume_release(
     temp_dir = None
     try:
         if ipa.name != asset_name:
-            temp_dir = pathlib.Path(tempfile.mkdtemp(prefix="nullsign-publish-"))
+            temp_dir = pathlib.Path(tempfile.mkdtemp(prefix="source-publish-"))
             staged = temp_dir / asset_name
             shutil.copy2(ipa, staged)
 
@@ -245,7 +248,7 @@ def update_catalog(
                         "name": "jmargocubs Apps — Apple TV",
                         "subtitle": "Kyro Apple TV beta builds",
                         "description": (
-                            "Nullsign-compatible tvOS source for Kyro Apple TV "
+                            "AltStore-compatible tvOS source for Kyro Apple TV "
                             "beta IPAs hosted on GitHub Releases."
                         ),
                         "iconURL": APPS[app]["icon_url"],
@@ -293,7 +296,7 @@ def commit_and_push_source(app: str, version: str, build: str, dry_run: bool) ->
         if (ROOT / path).exists():
             run(["git", "add", path], cwd=ROOT, check=False)
 
-    message = f"Publish {app} {version} build {build} to Nullsign source"
+    message = f"Publish {app} {version} build {build} to shared source catalog"
     run(["git", "commit", "-m", message], cwd=ROOT)
     run(["git", "push", "origin", "HEAD:main"], cwd=ROOT)
     sha = run(["git", "rev-parse", "HEAD"], cwd=ROOT).stdout.strip()
@@ -319,14 +322,16 @@ def verify_public_asset(url: str, digest: str, size: int) -> None:
     )
 
 
-def rewrite_descriptions_for_nullsign() -> None:
-    """Keep source descriptions Nullsign-oriented without touching app entries."""
+def rewrite_source_header() -> None:
+    """Keep top-level source descriptions current without rewriting app history."""
     source_path = ROOT / "source.json"
     data = json.loads(source_path.read_text())
     data["subtitle"] = "Kyro, Kyro Apple TV, Zepzi, and Sunny Meadow beta builds"
     data["description"] = (
-        "Nullsign-compatible source for Kyro (iOS), Kyro Apple TV (tvOS), "
-        "Zepzi, and Sunny Meadow beta IPAs hosted on GitHub Releases."
+        "AltStore-compatible source for Kyro (iOS), Kyro Apple TV (tvOS), "
+        "Zepzi, and Sunny Meadow beta IPAs hosted on GitHub Releases. "
+        "Repository listings show App Name — Build N; installed app titles "
+        "come from each IPA and are unchanged by this catalog."
     )
     source_path.write_text(json.dumps(data, indent=2) + "\n")
 
@@ -361,14 +366,16 @@ def main() -> int:
     download_url = download_url_for(app, version, build, asset_name)
     title = f"{APPS[app]['display_name']} {version} (Build {build}) Beta"
     notes = args.notes or (
-        f"Unsigned {APPS[app]['platform']} beta for Nullsign.\n\n"
+        f"Unsigned {APPS[app]['platform']} beta for compatible signing apps.\n\n"
         f"- Bundle: `{meta['bundle']}`\n"
         f"- Version: {version} ({build})\n"
         f"- Minimum OS: {meta['min_os']}\n"
         f"- Size: {meta['size']} bytes\n"
-        f"- SHA-256: `{meta['sha256']}`\n\n"
+        f"- SHA-256: `{meta['sha256']}`\n"
+        f"- Catalog listing title: `{APPS[app]['display_name']} — Build {build}`\n\n"
         "Re-sign with your own certificate before install. No source code or "
-        "signing material is included."
+        "signing material is included. The installed app name inside the IPA "
+        "is unchanged."
     )
 
     print(
@@ -409,7 +416,7 @@ def main() -> int:
 
     verify_public_asset(download_url, meta["sha256"], meta["size"])
 
-    rewrite_descriptions_for_nullsign()
+    rewrite_source_header()
     update_catalog(
         app=app,
         version=version,

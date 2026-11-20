@@ -1,7 +1,7 @@
 {
   "name": "jmargocubs Apps",
   "subtitle": "Kyro, Kyro Apple TV, Zepzi, and Sunny Meadow beta builds",
-  "description": "Nullsign-compatible source for Kyro (iOS), Kyro Apple TV (tvOS), Zepzi, and Sunny Meadow beta IPAs hosted on GitHub Releases.",
+  "description": "AltStore-compatible source for Kyro (iOS), Kyro Apple TV (tvOS), Zepzi, and Sunny Meadow beta IPAs hosted on GitHub Releases. Repository listings show App Name \u2014 Build N; installed app titles come from each IPA and are unchanged by this catalog.",
   "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
   "headerURL": null,
   "website": "https://jmargocubs.github.io/feather-apps/",
@@ -9,7 +9,7 @@
   "featuredApps": [],
   "apps": [
     {
-      "name": "Kyro",
+      "name": "Kyro \u2014 Build 101",
       "bundleIdentifier": "com.cubbiestream.kyro",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client",
@@ -117,7 +117,7 @@
       ]
     },
     {
-      "name": "Kyro Apple TV",
+      "name": "Kyro Apple TV \u2014 Build 101",
       "bundleIdentifier": "com.cubbiestream.kyro.tvos",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client for Apple TV",
@@ -249,7 +249,7 @@
       ]
     },
     {
-      "name": "Zepzi",
+      "name": "Zepzi \u2014 Build 1",
       "bundleIdentifier": "app.flippy.reader",
       "developerName": "jmargocubs",
       "subtitle": "Comic reader for Komga",
@@ -277,7 +277,7 @@
       ]
     },
     {
-      "name": "Sunny Meadow",
+      "name": "Sunny Meadow \u2014 Build 48",
       "bundleIdentifier": "com.sunnymeadow.app.beta",
       "developerName": "jmargocubs",
       "subtitle": "Private recovery and mood journaling",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Insert or resume an exact app version entry in a Nullsign-compatible source.json."""
+"""Insert or resume an exact app version entry in an AltStore-compatible source.json."""
 
 from __future__ import annotations
 
@@ -14,7 +14,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from apps import (  # noqa: E402
     APP_IDS,
     APPS,
+    base_name_for,
     bundle_for,
+    catalog_listing_name,
+    current_listing_name,
     min_os_for,
 )
 
@@ -26,14 +29,24 @@ def find_app(data: dict, bundle_id: str):
     return None
 
 
-def ensure_app(data: dict, app_id: str) -> dict:
+def apply_catalog_metadata(app: dict, app_id: str, versions: list[dict], build: str) -> None:
+    """Refresh listing/display metadata without rewriting version history rows."""
+    meta = APPS[app_id]
+    app["name"] = current_listing_name(app_id, versions, build)
+    app["subtitle"] = meta["subtitle"]
+    app["localizedDescription"] = meta["localized_description"]
+    app["iconURL"] = meta["icon_url"]
+    app["tintColor"] = meta["tint_color"]
+
+
+def ensure_app(data: dict, app_id: str, build: str) -> dict:
     meta = APPS[app_id]
     bundle_id = meta["bundle"]
     existing = find_app(data, bundle_id)
     if existing is not None:
         return existing
     entry = {
-        "name": meta["source_name"],
+        "name": catalog_listing_name(app_id, build),
         "bundleIdentifier": bundle_id,
         "developerName": "jmargocubs",
         "subtitle": meta["subtitle"],
@@ -59,27 +72,70 @@ def newest_build(versions: list[dict], marketing_version: str) -> int | None:
     return max(builds) if builds else None
 
 
+def refresh_listing_names(data: dict) -> int:
+    """Set each known app's listing title from its current head build. Returns changes."""
+    changed = 0
+    by_bundle = {meta["bundle"]: app_id for app_id, meta in APPS.items()}
+    for app in data.get("apps", []):
+        app_id = by_bundle.get(app.get("bundleIdentifier"))
+        if app_id is None:
+            continue
+        versions = app.get("versions") or []
+        if not versions:
+            continue
+        desired = current_listing_name(app_id, versions, versions[0].get("buildVersion"))
+        if app.get("name") != desired:
+            app["name"] = desired
+            changed += 1
+        # Keep stem documentation stable; never invent IPA display names here.
+        if base_name_for(app_id) not in str(app.get("name") or ""):
+            raise RuntimeError(f"listing name missing base title for {app_id}")
+    return changed
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", default="source.json")
-    parser.add_argument("--app", required=True, choices=list(APP_IDS))
-    parser.add_argument("--version", required=True)
-    parser.add_argument("--build", required=True)
-    parser.add_argument("--size", type=int, required=True)
-    parser.add_argument("--tag", required=True)
-    parser.add_argument("--asset", required=True)
+    parser.add_argument("--app", choices=list(APP_IDS))
+    parser.add_argument("--version")
+    parser.add_argument("--build")
+    parser.add_argument("--size", type=int)
+    parser.add_argument("--tag")
+    parser.add_argument("--asset")
     parser.add_argument("--download-url")
     parser.add_argument("--idempotent", action="store_true")
     parser.add_argument("--allow-create", action="store_true")
     parser.add_argument("--date", default=date.today().isoformat())
+    parser.add_argument(
+        "--refresh-listing-names",
+        action="store_true",
+        help="rewrite apps[].name from each head build without adding versions",
+    )
     args = parser.parse_args()
 
     source_path = pathlib.Path(args.source)
     with source_path.open() as handle:
         data = json.load(handle)
 
+    if args.refresh_listing_names:
+        changed = refresh_listing_names(data)
+        with source_path.open("w") as handle:
+            json.dump(data, handle, indent=2)
+            handle.write("\n")
+        print(f"refreshed listing names: {changed} app(s) updated")
+        return
+
+    required = [args.app, args.version, args.build, args.size, args.tag, args.asset]
+    if any(value is None for value in required):
+        print(
+            "app, version, build, size, tag, and asset are required unless "
+            "--refresh-listing-names is set",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
     if args.allow_create:
-        app = ensure_app(data, args.app)
+        app = ensure_app(data, args.app, str(args.build))
     else:
         app = find_app(data, bundle_for(args.app))
         if app is None:
@@ -114,12 +170,23 @@ def main() -> None:
                 "minOSVersion": version.get("minOSVersion"),
                 "date": version.get("date"),
             }
-            if (
-                args.idempotent
-                and comparable == expected
-                and app.get("size") == args.size
-            ):
-                print("source entry already matches", args.app, args.version, args.build)
+            if args.idempotent and comparable == expected and app.get("size") == args.size:
+                desired_name = current_listing_name(
+                    args.app, app.get("versions", []), args.build
+                )
+                if app.get("name") == desired_name:
+                    print("source entry already matches", args.app, args.version, args.build)
+                    return
+                # Exact release row already present; only refresh listing title.
+                apply_catalog_metadata(app, args.app, app.get("versions", []), str(args.build))
+                with source_path.open("w") as handle:
+                    json.dump(data, handle, indent=2)
+                    handle.write("\n")
+                print(
+                    "source entry already matches; refreshed listing name",
+                    args.app,
+                    desired_name,
+                )
                 return
             if args.idempotent:
                 print("existing source entry does not match expected release", file=sys.stderr)
@@ -151,18 +218,13 @@ def main() -> None:
     }
     app.setdefault("versions", []).insert(0, entry)
     app["size"] = args.size
-    # Keep catalog display fields current without rewriting unrelated apps.
-    meta = APPS[args.app]
-    app["name"] = meta["source_name"]
-    app["subtitle"] = meta["subtitle"]
-    app["localizedDescription"] = meta["localized_description"]
-    app["iconURL"] = meta["icon_url"]
-    app["tintColor"] = meta["tint_color"]
+    # Keep catalog listing title current without rewriting unrelated apps or history.
+    apply_catalog_metadata(app, args.app, app.get("versions", []), str(args.build))
 
     with source_path.open("w") as handle:
         json.dump(data, handle, indent=2)
         handle.write("\n")
-    print("updated", args.app, args.version, args.build)
+    print("updated", args.app, args.version, args.build, "listing", app["name"])
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 {
   "name": "jmargocubs Apps \u2014 Apple TV",
   "subtitle": "Kyro Apple TV beta builds",
-  "description": "Nullsign-compatible tvOS source for Kyro Apple TV beta IPAs hosted on GitHub Releases.",
+  "description": "AltStore-compatible tvOS source for Kyro Apple TV beta IPAs hosted on GitHub Releases. Repository listings show App Name \u2014 Build N; installed app titles come from each IPA and are unchanged by this catalog.",
   "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
   "headerURL": null,
   "website": "https://jmargocubs.github.io/feather-apps/",
@@ -9,7 +9,7 @@
   "featuredApps": [],
   "apps": [
     {
-      "name": "Kyro Apple TV",
+      "name": "Kyro Apple TV \u2014 Build 101",
       "bundleIdentifier": "com.cubbiestream.kyro.tvos",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client for Apple TV",

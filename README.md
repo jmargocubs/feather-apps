@@ -3,7 +3,9 @@
 Public beta distribution source for **Kyro (iOS)**, **Kyro Apple TV (tvOS)**,
 **Zepzi**, and **Sunny Meadow**.
 
-Primary client: **Nullsign** (AltStore-compatible source format).
+Format: AltStore-compatible `source.json` for compatible signing / sideloading
+apps. Repository listings use `apps[].name` in the form
+**App Name — Build N**. Installed IPA display names are unchanged.
 
 Source URL: https://jmargocubs.github.io/feather-apps/source.json
 
@@ -17,7 +19,8 @@ testers re-sign with their own certificate before install.
 
 A successful verified IPA build automatically publishes through
 `scripts/publish_ipa.py`. No separate publish approval is required. See
-[docs/nullsign-auto-publish.md](docs/nullsign-auto-publish.md).
+[docs/nullsign-auto-publish.md](docs/nullsign-auto-publish.md) and
+[docs/catalog-listing-names.md](docs/catalog-listing-names.md).
 
 ```sh
 python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \

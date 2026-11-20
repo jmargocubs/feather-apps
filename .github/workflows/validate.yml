@@ -13,4 +13,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.11" }
-      - run: python scripts/validate_source.py source.json
+      - name: Validate source catalogs
+        run: |
+          python scripts/validate_source.py source.json
+          python scripts/validate_source.py tvos-source.json
+      - name: Run catalog and workflow tests
+        run: |
+          python -m unittest tests.test_catalog_listing_names tests.test_workflow_integration -v
+          python tests/test_pipeline.py

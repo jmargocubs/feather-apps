@@ -1,14 +1,18 @@
-# Nullsign auto-publish policy
+# Shared source auto-publish policy
 
 Standing authorization for all jmargocubs Apple apps:
 
 **Whenever an IPA is successfully built and verified, publish it automatically
-to the GitHub-backed Nullsign source. Do not ask for a separate publish
-approval.**
+to the GitHub-backed AltStore-compatible source used by signing apps. Do not ask
+for a separate publish approval.**
 
-Distribution client: **Nullsign** (AltStore-compatible `source.json`).
+Distribution: AltStore-compatible `source.json` for compatible signing /
+sideloading clients.
 Repository: [`jmargocubs/feather-apps`](https://github.com/jmargocubs/feather-apps).
 Live source: https://jmargocubs.github.io/feather-apps/source.json
+
+Repository listings set `apps[].name` to `App Name — Build N`. Installed app
+titles inside IPAs are not modified. See [catalog-listing-names.md](catalog-listing-names.md).
 
 ## Covered apps
 
@@ -38,8 +42,8 @@ The script:
 3. Creates or resumes the exact GitHub prerelease (idempotent).
 4. Uploads the IPA plus a `.sha256` sidecar.
 5. Downloads the public asset without credentials and checks SHA-256/size.
-6. Updates `source.json` (and `tvos-source.json` for tvOS) without touching other apps.
-7. Refuses duplicate mismatched entries and refuses older builds that would downgrade the newest entry.
+6. Updates `source.json` (and `tvos-source.json` for tvOS) without touching other apps, and sets the listing title to `App Name — Build N` for the published head build.
+7. Refuses duplicate mismatched entries and refuses older builds that would downgrade the newest entry. Exact republishes are idempotent and may only refresh a stale listing title.
 8. Commits and pushes the catalog update to `feather-apps` `main` (Deploy Pages follows).
 
 If any step fails, the local IPA is left in place for retry. Nothing is deleted.
@@ -61,6 +65,6 @@ If any step fails, the local IPA is left in place for retry. Nothing is deleted.
 
 ## Client
 
-Import the source URL in **Nullsign**. Re-sign unsigned IPAs with your own
-certificate before install. This workflow does not publish source code, API
-keys, provider credentials, provisioning profiles, or signing certificates.
+Import the source URL in your compatible signing app. Re-sign unsigned IPAs with
+your own certificate before install. This workflow does not publish source code,
+API keys, provider credentials, provisioning profiles, or signing certificates.
