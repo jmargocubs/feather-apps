@@ -10,10 +10,10 @@ on:
         type: choice
         options: [stage, validate, publish]
       app:
-        description: "kyro, kyro-tvos, zepzi, or sunnymeadow"
+        description: "kyro, kyro-labs, kyro-tvos, zepzi, or sunnymeadow"
         required: true
         type: choice
-        options: [kyro, kyro-tvos, zepzi, sunnymeadow]
+        options: [kyro, kyro-labs, kyro-tvos, zepzi, sunnymeadow]
       version: { description: "app version (validate/publish)", required: false }
       build: { description: "app build (validate/publish)", required: false }
       release_notes: { description: "release notes (publish)", required: false }

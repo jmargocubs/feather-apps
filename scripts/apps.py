@@ -63,6 +63,29 @@ APPS = {
         "tint_color": "#4F46E5",
         "update_tvos_source": True,
     },
+    # Kyro Labs: experimental builds of Kyro on its own bundle ID, so it installs beside stable
+    # Kyro and never replaces it. Its tags, listing, versions and builds are tracked separately
+    # (source.json is keyed by bundle ID). Never reuse "kyro"'s bundle, tag template or listing.
+    "kyro-labs": {
+        "bundle": "com.cubbiestream.kyro.labs",
+        "min_os": "18.0",
+        "display_name": "Kyro Labs",
+        "platform": "ios",
+        "release_repo": "jmargocubs/Kyro",
+        "tag_template": "kyro-labs-ios-v{version}-build{build}-rc1",
+        "source_name": "Kyro Labs",
+        "subtitle": "Experimental builds of Kyro",
+        "localized_description": (
+            "Kyro Labs is the experimental edition of Kyro, used to try new "
+            "features such as upstream Silo updates and additional media "
+            "servers before they reach Kyro. It installs separately from Kyro, "
+            "keeps its own data and sign-in, and may be less stable. This "
+            "unsigned beta requires your own signing and sideloading setup."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
+        "tint_color": "#F59E0B",
+        "update_tvos_source": False,
+    },
     "zepzi": {
         "bundle": "app.flippy.reader",
         "min_os": "18.0",
