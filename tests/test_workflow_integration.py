@@ -50,8 +50,8 @@ class WorkflowIntegrationTests(unittest.TestCase):
             source = pathlib.Path(directory) / "source.json"
             shutil.copy(ROOT / "source.json", source)
             args = (
-                "--source", source, "--app", "kyro", "--version", "9.9.9",
-                "--build", "999", "--size", "100", "--tag", "kyro-v9.9.9-b999",
+                "--source", source, "--app", "kyro", "--version", "9.9.999",
+                "--build", "999", "--size", "100", "--tag", "kyro-v9.9.999-b999",
                 "--asset", "kyro.ipa",
             )
             first = self.run_script("update_source.py", *args)
@@ -93,8 +93,8 @@ class WorkflowIntegrationTests(unittest.TestCase):
             source = pathlib.Path(directory) / "source.json"
             shutil.copy(ROOT / "source.json", source)
             common = (
-                "--source", source, "--app", "kyro", "--version", "8.8.8",
-                "--build", "888", "--size", "123", "--tag", "kyro-v8.8.8-b888",
+                "--source", source, "--app", "kyro", "--version", "8.8.888",
+                "--build", "888", "--size", "123", "--tag", "kyro-v8.8.888-b888",
                 "--asset", "kyro.ipa", "--date", "2026-11-05",
             )
             first = self.run_script("update_source.py", "--idempotent", *common)

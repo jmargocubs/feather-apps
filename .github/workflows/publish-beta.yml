@@ -141,6 +141,12 @@ jobs:
           [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
           [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
           [[ "$SIZE" =~ ^[0-9]+$ ]]
+          # Signing-app visible version must be major.minor.<build> (e.g. 1.0.105).
+          EXPECTED="$(python scripts/apps.py visible-version "$VERSION" "$BUILD")"
+          if [[ "$VERSION" != "$EXPECTED" ]]; then
+            echo "version $VERSION must equal visible marketing version $EXPECTED for build $BUILD" >&2
+            exit 1
+          fi
           if [[ "$OPERATION" == publish ]]; then
             test -n "$NOTES"
             if [[ "$GITHUB_REF" != refs/heads/main ]]; then

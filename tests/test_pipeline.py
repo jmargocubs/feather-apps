@@ -13,12 +13,15 @@ if ipa and os.path.isfile(ipa):
 # duplicate rejection
 tmp=tempfile.mkdtemp()
 shutil.copy(os.path.join(ROOT,"source.json"), os.path.join(tmp,"source.json"))
-subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","9.9.9","--build","999","--size","100","--tag","kyro-v9.9.9-b999","--asset","x.ipa"],check=True)
-r=subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","9.9.9","--build","999","--size","100","--tag","kyro-v9.9.9-b999","--asset","x.ipa"],capture_output=True,text=True)
+subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","9.9.999","--build","999","--size","100","--tag","kyro-v9.9.999-b999","--asset","x.ipa"],check=True)
+r=subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","9.9.999","--build","999","--size","100","--tag","kyro-v9.9.999-b999","--asset","x.ipa"],capture_output=True,text=True)
 assert r.returncode!=0, "duplicate not rejected"
+# misaligned marketing version (legacy 1.0.0 + build) must fail
+r=subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","1.0.0","--build","1000","--size","100","--tag","kyro-v1.0.0-b1000","--asset","x.ipa"],capture_output=True,text=True)
+assert r.returncode!=0, "misaligned version/build should fail"
 # date check
 d=json.load(open(os.path.join(tmp,"source.json")))
-versions=[v for a in d["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro" for v in a["versions"] if v["version"]=="9.9.9"]
+versions=[v for a in d["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro" for v in a["versions"] if v["version"]=="9.9.999"]
 from datetime import date
 assert versions and versions[0]["date"] == date.today().isoformat(), "date should be today"
 print("tests passed")

@@ -83,6 +83,10 @@ def refuse_if_sensitive(path: pathlib.Path) -> None:
 
 
 def validate_and_scan(ipa: pathlib.Path, app: str, version: str, build: str) -> dict:
+    from apps import assert_version_aligned_with_build
+
+    # Catalog version must be major.minor.<build> and match the IPA short version.
+    assert_version_aligned_with_build(version, build)
     bundle = bundle_for(app)
     min_os = min_os_for(app)
     validate = run(

@@ -32,7 +32,7 @@ After a verified unsigned IPA exists:
 ```sh
 cd /path/to/feather-apps
 python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
-  --app kyro-tvos --version 1.0.0 --build 87
+  --app kyro-tvos --version 1.0.87 --build 87
 ```
 
 The script:

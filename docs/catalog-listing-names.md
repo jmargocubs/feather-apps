@@ -46,7 +46,7 @@ Examples:
 | Surface | Limitation |
 |---|---|
 | Repository listing | Shows `apps[].name` (includes build). Long names may truncate in narrow UI cells depending on the client. |
-| Version history UI | Clients typically show marketing `version` and `buildVersion` per row; they do not need a per-version copy of the listing title. |
+| Version history UI | Clients typically show marketing `version` and `buildVersion` per row; they do not need a per-version copy of the listing title. New rows use `version` = `major.minor.<build>` (for example `1.0.105`) so the version chip itself carries the build. |
 | Home screen after install | Still the IPA’s own display name (for example `Kyro`), not `Kyro — Build N`. |
 | tvOS vs iOS sources | Apple TV builds also appear in `tvos-source.json`; iOS `source.json` may still list Kyro Apple TV for multi-app sources. |
 | Client variance | Some third-party clients may prefer subtitle/version chips over the listing title. The AltStore-compatible field for the list title remains `name`. |

@@ -161,10 +161,47 @@ def download_url_for(app: str, version: str, build: str, asset: str) -> str:
     return f"https://github.com/{repo}/releases/download/{tag}/{asset}"
 
 
+def visible_marketing_version(base: str, build: str | int) -> str:
+    """Compose the signing-app visible marketing version: major.minor.<build>.
+
+    ``base`` is the product's major.minor (or major.minor.patch) stem, for
+    example ``1.0.0``, ``1.0``, or ``0.3.0``. The build number becomes the
+    patch component so Feather / AltStore-style clients show ``1.0.105``
+    instead of ``1.0.0 (105)``.
+
+    Idempotent when ``base`` is already ``major.minor.<build>``. Always keeps
+    the existing major and minor; never appends an extra ``.<build>`` suffix
+    onto an already-aligned version.
+    """
+    build_s = str(build).strip()
+    if not build_s.isdigit():
+        raise ValueError(f"build must be numeric digits, got {build!r}")
+    parts = str(base).strip().split(".")
+    if len(parts) < 2:
+        raise ValueError(f"base version must be major.minor[.patch], got {base!r}")
+    major, minor = parts[0], parts[1]
+    if not major.isdigit() or not minor.isdigit():
+        raise ValueError(f"base version must be numeric major.minor, got {base!r}")
+    return f"{major}.{minor}.{build_s}"
+
+
+def assert_version_aligned_with_build(version: str, build: str | int) -> str:
+    """Require catalog/IPA CFBundleShortVersionString == major.minor.<build>."""
+    expected = visible_marketing_version(version, build)
+    if str(version).strip() != expected:
+        raise ValueError(
+            f"version {version!r} must equal visible marketing version {expected!r} "
+            f"for build {build}"
+        )
+    return expected
+
+
 def main(argv: list[str]) -> int:
     if len(argv) == 1 or argv[1] in {"-h", "--help"}:
         print(
-            "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|listing-name <app> <build>|tag <app> <version> <build>",
+            "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|"
+            "listing-name <app> <build>|tag <app> <version> <build>|"
+            "visible-version <base> <build>",
             file=sys.stderr,
         )
         return 2
@@ -204,8 +241,17 @@ def main(argv: list[str]) -> int:
             return 1
         print(tag_for(app, version, build))
         return 0
+    if cmd == "visible-version" and len(argv) == 4:
+        try:
+            print(visible_marketing_version(argv[2], argv[3]))
+        except ValueError as exc:
+            print(exc, file=sys.stderr)
+            return 1
+        return 0
     print(
-        "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|listing-name <app> <build>|tag <app> <version> <build>",
+        "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|"
+        "listing-name <app> <build>|tag <app> <version> <build>|"
+        "visible-version <base> <build>",
         file=sys.stderr,
     )
     return 2
