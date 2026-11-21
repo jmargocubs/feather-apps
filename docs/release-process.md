@@ -10,23 +10,19 @@ Standing policy: after a verified unsigned IPA build succeeds, publish immediate
 ```sh
 cd /path/to/feather-apps
 python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
-  --app kyro-tvos --version 1.0.87 --build 87
+  --app kyro-tvos --version 1.0.0 --build 87
 ```
 
 Supported app ids: `kyro`, `kyro-tvos`, `zepzi`, `sunnymeadow`.
 
-## Visible marketing version
+## Marketing version and build
 
-Signing apps show `CFBundleShortVersionString` prominently. Stamp that field as
-`major.minor.<build>` (for example Kyro `1.0.105`, Sunny Meadow `0.3.48`) and keep
-`CFBundleVersion` as the numeric build. Catalog `version` must match the IPA short
-version exactly; `buildVersion` stays the numeric build. Compose with:
-
-```sh
-python3 scripts/apps.py visible-version 1.0.0 105   # -> 1.0.105
-```
-
-Do not rewrite historical `versions[]` rows. New publishes use the aligned form only.
+Marketing version (`CFBundleShortVersionString` / catalog `version`) and build
+number (`CFBundleVersion` / catalog `buildVersion`) are independent. Pass the
+IPA’s real marketing version and build to `publish_ipa.py`; do not rewrite the
+marketing string to embed the build. Repository listing titles carry the build
+as `App Name — Build N`. Historical `versions[]` rows and release URLs stay
+unchanged.
 
 ## Legacy Actions path: stage / validate / publish
 
@@ -57,7 +53,7 @@ for audited CI-only releases.
 ```sh
 cd /path/to/feather-apps
 python3 scripts/stage_ipa.py /absolute/path/to/Kyro.ipa \
-  --app kyro --version 1.0.22 --build 22
+  --app kyro --version 1.0.0 --build 22
 ```
 
 The helper prints JSON. Record `artifact_run_id`, `artifact_name`, `ipa_sha256`, and `ipa_size`.
@@ -68,7 +64,7 @@ before merge, add `--ref feature/release-pipeline`; normal operation uses the de
 
 ```sh
 gh workflow run publish-beta.yml --ref main \
-  -f operation=validate -f app=kyro -f version=1.0.22 -f build=22 \
+  -f operation=validate -f app=kyro -f version=1.0.0 -f build=22 \
   -f artifact_run_id=RUN_ID -f artifact_name=kyro-ipa-candidate \
   -f expected_sha256=SHA256 -f expected_size=SIZE_BYTES
 ```
@@ -81,7 +77,7 @@ ID, version, build, minimum OS, security scan, SHA-256, and size.
 
 ```sh
 gh workflow run publish-beta.yml --ref main \
-  -f operation=publish -f app=kyro -f version=1.0.22 -f build=22 \
+  -f operation=publish -f app=kyro -f version=1.0.0 -f build=22 \
   -f artifact_run_id=RUN_ID -f artifact_name=kyro-ipa-candidate \
   -f expected_sha256=SHA256 -f expected_size=SIZE_BYTES \
   -f release_notes='Approved beta notes'
@@ -108,7 +104,7 @@ SHA-256, size, and release notes:
 
 ```sh
 gh workflow run publish-beta.yml --ref main \
-  -f operation=publish -f app=kyro -f version=1.0.22 -f build=22 \
+  -f operation=publish -f app=kyro -f version=1.0.0 -f build=22 \
   -f artifact_run_id=RUN_ID -f artifact_name=kyro-ipa-candidate \
   -f expected_sha256=SHA256 -f expected_size=SIZE_BYTES \
   -f release_notes='Approved beta notes'

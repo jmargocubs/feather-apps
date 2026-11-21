@@ -16,9 +16,13 @@ shutil.copy(os.path.join(ROOT,"source.json"), os.path.join(tmp,"source.json"))
 subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","9.9.999","--build","999","--size","100","--tag","kyro-v9.9.999-b999","--asset","x.ipa"],check=True)
 r=subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","9.9.999","--build","999","--size","100","--tag","kyro-v9.9.999-b999","--asset","x.ipa"],capture_output=True,text=True)
 assert r.returncode!=0, "duplicate not rejected"
-# misaligned marketing version (legacy 1.0.0 + build) must fail
+# independent marketing version + build must succeed (1.0.0 with build 1000)
 r=subprocess.run([sys.executable, os.path.join(ROOT,"scripts","update_source.py"),"--source",os.path.join(tmp,"source.json"),"--app","kyro","--version","1.0.0","--build","1000","--size","100","--tag","kyro-v1.0.0-b1000","--asset","x.ipa"],capture_output=True,text=True)
-assert r.returncode!=0, "misaligned version/build should fail"
+assert r.returncode==0, f"independent version/build should succeed: {r.stderr}"
+d_indep=json.load(open(os.path.join(tmp,"source.json")))
+kyro=[a for a in d_indep["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro"][0]
+assert kyro["versions"][0]["version"]=="1.0.0" and kyro["versions"][0]["buildVersion"]=="1000"
+assert kyro["name"]=="Kyro — Build 1000"
 # date check
 d=json.load(open(os.path.join(tmp,"source.json")))
 versions=[v for a in d["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro" for v in a["versions"] if v["version"]=="9.9.999"]

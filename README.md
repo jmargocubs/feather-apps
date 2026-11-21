@@ -24,5 +24,5 @@ A successful verified IPA build automatically publishes through
 
 ```sh
 python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
-  --app kyro-tvos --version 1.0.87 --build 87
+  --app kyro-tvos --version 1.0.0 --build 87
 ```

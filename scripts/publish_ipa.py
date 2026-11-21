@@ -83,10 +83,11 @@ def refuse_if_sensitive(path: pathlib.Path) -> None:
 
 
 def validate_and_scan(ipa: pathlib.Path, app: str, version: str, build: str) -> dict:
-    from apps import assert_version_aligned_with_build
+    from apps import assert_independent_version_fields
 
-    # Catalog version must be major.minor.<build> and match the IPA short version.
-    assert_version_aligned_with_build(version, build)
+    # Marketing version and build stay independent; IPA short version must match
+    # the declared marketing version, and CFBundleVersion must match build.
+    assert_independent_version_fields(version, build)
     bundle = bundle_for(app)
     min_os = min_os_for(app)
     validate = run(

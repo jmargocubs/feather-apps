@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from apps import (  # noqa: E402
     APP_IDS,
     APPS,
-    assert_version_aligned_with_build,
+    assert_independent_version_fields,
     base_name_for,
     bundle_for,
     catalog_listing_name,
@@ -66,10 +66,10 @@ def newest_build(
 ) -> int | None:
     """Highest buildVersion across rows.
 
-    When ``marketing_version`` is set, only that marketing string is considered
-    (legacy). New publishes use unique major.minor.<build> strings, so callers
-    should pass ``marketing_version=None`` to compare build numbers globally and
-    refuse duplicates/downgrades across old 1.0.0 rows and new 1.0.N rows.
+    When ``marketing_version`` is set, only that marketing string is considered.
+    Callers that refuse duplicates/downgrades across the whole app should pass
+    ``marketing_version=None`` so build numbers are compared globally, even when
+    several marketing versions share the same catalog.
     """
     builds = []
     for version in versions:
@@ -204,10 +204,8 @@ def main() -> None:
             print("duplicate version/build", file=sys.stderr)
             sys.exit(1)
 
-    # New catalog rows must use major.minor.<build>. Legacy rows may still be
-    # resumed above without rewriting history.
     try:
-        assert_version_aligned_with_build(str(args.version), str(args.build))
+        assert_independent_version_fields(str(args.version), str(args.build))
     except ValueError as exc:
         print(exc, file=sys.stderr)
         sys.exit(1)
@@ -218,8 +216,8 @@ def main() -> None:
         print("build must be an integer", file=sys.stderr)
         sys.exit(1)
 
-    # Compare build numbers across all marketing versions so a new 1.0.104 row
-    # cannot land after 1.0.0/105 or 1.0.105/105.
+    # Compare build numbers across all marketing versions so a newer build cannot
+    # land after an older one under a different marketing string.
     current_newest = newest_build(app.get("versions", []), marketing_version=None)
     if current_newest is not None and build_number < current_newest:
         print(
