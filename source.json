@@ -157,15 +157,23 @@
       ]
     },
     {
-      "name": "Kyro Apple TV \u2014 Build 102",
+      "name": "Kyro Apple TV \u2014 Build 103",
       "bundleIdentifier": "com.cubbiestream.kyro.tvos",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client for Apple TV",
       "localizedDescription": "Kyro Apple TV is a tvOS streaming client for self-hosted media libraries, live channels, and Sports Hub features. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 31512539,
+      "size": 31560208,
       "versions": [
+        {
+          "version": "1.0.103",
+          "buildVersion": "103",
+          "date": "2026-11-21",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.103-build103-rc1/Kyro-1.0.103-103-tvos-unsigned-arm64.ipa",
+          "size": 31560208,
+          "minOSVersion": "26.0"
+        },
         {
           "version": "1.0.0",
           "buildVersion": "102",
