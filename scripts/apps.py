@@ -86,6 +86,27 @@ APPS = {
         "tint_color": "#F59E0B",
         "update_tvos_source": False,
     },
+    # Kyro Labs Apple TV: experimental tvOS builds on their own bundle ID, beside Kyro Apple TV.
+    # Never reuse "kyro-tvos"'s bundle, tag template or listing.
+    "kyro-labs-tvos": {
+        "bundle": "com.cubbiestream.kyro.tvos.labs",
+        "min_os": "26.0",
+        "display_name": "Kyro Labs",
+        "platform": "tvos",
+        "release_repo": "jmargocubs/Kyro",
+        "tag_template": "kyro-labs-tvos-v{version}-build{build}-rc1",
+        "source_name": "Kyro Labs Apple TV",
+        "subtitle": "Experimental builds of Kyro for Apple TV",
+        "localized_description": (
+            "Kyro Labs Apple TV is the experimental edition of Kyro for tvOS. It "
+            "installs separately from Kyro Apple TV, keeps its own data and "
+            "sign-in, and may be less stable. This unsigned beta requires your "
+            "own signing and sideloading setup."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
+        "tint_color": "#F59E0B",
+        "update_tvos_source": True,
+    },
     "zepzi": {
         "bundle": "app.flippy.reader",
         "min_os": "18.0",
