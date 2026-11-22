@@ -509,15 +509,23 @@
       ]
     },
     {
-      "name": "Kyro Labs Apple TV \u2014 Build 105",
+      "name": "Kyro Labs Apple TV \u2014 Build 106",
       "bundleIdentifier": "com.cubbiestream.kyro.tvos.labs",
       "developerName": "jmargocubs",
       "subtitle": "Experimental builds of Kyro for Apple TV",
       "localizedDescription": "Kyro Labs Apple TV is the experimental edition of Kyro for tvOS. It installs separately from Kyro Apple TV, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
       "tintColor": "#F59E0B",
-      "size": 21732642,
+      "size": 21734355,
       "versions": [
+        {
+          "version": "1.0.106",
+          "buildVersion": "106",
+          "date": "2026-11-22",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-tvos-v1.0.106-build106-rc1/Kyro-Labs-1.0.106-106-tvos-unsigned-arm64.ipa",
+          "size": 21734355,
+          "minOSVersion": "26.0"
+        },
         {
           "version": "1.0.105",
           "buildVersion": "105",
