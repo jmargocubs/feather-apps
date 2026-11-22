@@ -473,15 +473,23 @@
       ]
     },
     {
-      "name": "Kyro Labs \u2014 Build 111",
+      "name": "Kyro Labs \u2014 Build 112",
       "bundleIdentifier": "com.cubbiestream.kyro.labs",
       "developerName": "jmargocubs",
       "subtitle": "Experimental builds of Kyro",
       "localizedDescription": "Kyro Labs is the experimental edition of Kyro, used to try new features such as upstream Silo updates and additional media servers before they reach Kyro. It installs separately from Kyro, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
       "tintColor": "#F59E0B",
-      "size": 29101793,
+      "size": 29172624,
       "versions": [
+        {
+          "version": "1.0.112",
+          "buildVersion": "112",
+          "date": "2026-11-22",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.112-build112-rc1/Kyro-Labs-1.0.112-112-ios-unsigned-arm64.ipa",
+          "size": 29172624,
+          "minOSVersion": "18.0"
+        },
         {
           "version": "1.0.111",
           "buildVersion": "111",
@@ -489,6 +497,26 @@
           "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.111-build111-rc1/Kyro-Labs-1.0.111-111-ios-unsigned-arm64.ipa",
           "size": 29101793,
           "minOSVersion": "18.0"
+        }
+      ]
+    },
+    {
+      "name": "Kyro Labs Apple TV \u2014 Build 105",
+      "bundleIdentifier": "com.cubbiestream.kyro.tvos.labs",
+      "developerName": "jmargocubs",
+      "subtitle": "Experimental builds of Kyro for Apple TV",
+      "localizedDescription": "Kyro Labs Apple TV is the experimental edition of Kyro for tvOS. It installs separately from Kyro Apple TV, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
+      "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
+      "tintColor": "#F59E0B",
+      "size": 21732642,
+      "versions": [
+        {
+          "version": "1.0.105",
+          "buildVersion": "105",
+          "date": "2026-11-22",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-tvos-v1.0.105-build105-rc1/Kyro-Labs-1.0.105-105-tvos-unsigned-arm64.ipa",
+          "size": 21732642,
+          "minOSVersion": "26.0"
         }
       ]
     }
