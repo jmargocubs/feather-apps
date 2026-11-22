@@ -9,22 +9,15 @@
   "featuredApps": [],
   "apps": [
     {
-      "name": "Kyro \u2014 Build 112",
+      "name": "Kyro \u2014 Build 111",
       "bundleIdentifier": "com.cubbiestream.kyro",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client",
       "localizedDescription": "Kyro is a customized iOS streaming client based on Silo, bringing your self-hosted media library together with an enhanced IPTV experience and Sports Hub features. Enjoy movies, TV shows, live channels, a personalized interface, and more in one app. Built for users who want greater control over their streaming experience. Sports Hub features are in development.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 30180229,
+      "size": 30112839,
       "versions": [
-        {
-          "version": "1.0.112",
-          "buildVersion": "112",
-          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-ios-v1.0.112-build112-rc1/Kyro-v1.0.112-Build112-Unsigned.ipa",
-          "size": 30180229,
-          "minOSVersion": "18.0"
-        },
         {
           "version": "1.0.111",
           "buildVersion": "111",
@@ -204,22 +197,15 @@
       ]
     },
     {
-      "name": "Kyro Apple TV \u2014 Build 105",
+      "name": "Kyro Apple TV \u2014 Build 104",
       "bundleIdentifier": "com.cubbiestream.kyro.tvos",
       "developerName": "jmargocubs",
       "subtitle": "Self-hosted media streaming client for Apple TV",
       "localizedDescription": "Kyro Apple TV is a tvOS streaming client for self-hosted media libraries, live channels, and Sports Hub features. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 18276606,
+      "size": 31466778,
       "versions": [
-        {
-          "version": "1.0.105",
-          "buildVersion": "105",
-          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-tvos-v1.0.105-build105-rc1/Kyro-1.0.105-105-tvos-unsigned-arm64.ipa",
-          "size": 18276606,
-          "minOSVersion": "26.0"
-        },
         {
           "version": "1.0.104",
           "buildVersion": "104",
