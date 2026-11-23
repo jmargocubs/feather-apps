@@ -147,6 +147,25 @@ APPS = {
         "tint_color": "#EA580C",
         "update_tvos_source": False,
     },
+    "kyrox": {
+        "bundle": "com.cubbiestream.kyrox",
+        "min_os": "18.0",
+        "display_name": "Kyro X",
+        "platform": "ios",
+        "release_repo": "jmargocubs/feather-apps",
+        "tag_template": "kyrox-v{version}-b{build}",
+        "source_name": "Kyro X",
+        "subtitle": "Independent streaming client for Jellyfin and media servers",
+        "localized_description": (
+            "Kyro X is an independent iOS streaming client featuring local "
+            "profiles, direct Jellyfin and Silo media server integration, IPTV "
+            "support, and a cinematic playback experience. This unsigned beta "
+            "requires your own signing and sideloading setup."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyrox/icon.png",
+        "tint_color": "#DC2626",
+        "update_tvos_source": False,
+    },
 }
 
 APP_IDS = tuple(sorted(APPS))

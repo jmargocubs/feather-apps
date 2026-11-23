@@ -283,7 +283,7 @@ def update_catalog(
 
 
 def commit_and_push_source(app: str, version: str, build: str, dry_run: bool) -> str | None:
-    status = run(["git", "status", "--porcelain", "--", "source.json", "tvos-source.json", "README.md", "docs/", "scripts/"], cwd=ROOT)
+    status = run(["git", "status", "--porcelain", "--", "source.json", "tvos-source.json", "README.md", "docs/", "scripts/", "assets/"], cwd=ROOT)
     changed = [line for line in status.stdout.splitlines() if line.strip()]
     if not changed:
         print("catalog already committed")
@@ -297,7 +297,7 @@ def commit_and_push_source(app: str, version: str, build: str, dry_run: bool) ->
     if (ROOT / "tvos-source.json").exists():
         run(["git", "add", "tvos-source.json"], cwd=ROOT)
     # Include workflow/script/doc updates that belong with the permanent policy.
-    for path in ("scripts/apps.py", "scripts/update_source.py", "scripts/publish_ipa.py", "README.md", "docs/release-process.md", "docs/nullsign-auto-publish.md"):
+    for path in ("scripts/apps.py", "scripts/scan_ipa.py", "scripts/update_source.py", "scripts/publish_ipa.py", "assets/kyrox/icon.png", "README.md", "docs/release-process.md", "docs/nullsign-auto-publish.md"):
         if (ROOT / path).exists():
             run(["git", "add", path], cwd=ROOT, check=False)
 

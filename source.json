@@ -567,6 +567,26 @@
           "minOSVersion": "26.0"
         }
       ]
+    },
+    {
+      "name": "Kyro X \u2014 Build 1",
+      "bundleIdentifier": "com.cubbiestream.kyrox",
+      "developerName": "jmargocubs",
+      "subtitle": "Independent streaming client for Jellyfin and media servers",
+      "localizedDescription": "Kyro X is an independent iOS streaming client featuring local profiles, direct Jellyfin and Silo media server integration, IPTV support, and a cinematic playback experience. This unsigned beta requires your own signing and sideloading setup.",
+      "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyrox/icon.png",
+      "tintColor": "#DC2626",
+      "size": 14143761,
+      "versions": [
+        {
+          "version": "0.1.0",
+          "buildVersion": "1",
+          "date": "2026-11-23",
+          "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyrox-v0.1.0-b1/KyroX-v0.1.0-b1-unsigned.ipa",
+          "size": 14143761,
+          "minOSVersion": "18.0"
+        }
+      ]
     }
   ]
 }

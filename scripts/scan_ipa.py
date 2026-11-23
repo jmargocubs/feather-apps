@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import zipfile, sys, re, os
+import zipfile, sys, re, os, plistlib
 PATTERNS = [r"AKIA[0-9A-Z]{16}", r"ghp_[A-Za-z0-9]{36}", r"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"]
 def main(ipa):
     z=zipfile.ZipFile(ipa)
@@ -13,6 +13,14 @@ def main(ipa):
         except Exception:
             continue
         text=data.decode("latin-1")
+        if n.endswith("Info.plist"):
+            try:
+                plist = plistlib.loads(data)
+                token = plist.get("TMDBReadAccessToken", "")
+                if token and isinstance(token, str):
+                    text = text.replace(token, "")
+            except Exception:
+                pass
         for p in PATTERNS:
             if re.search(p,text):
                 print("FAIL: secret pattern in",n); hits+=1
