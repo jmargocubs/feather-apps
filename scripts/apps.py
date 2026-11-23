@@ -69,11 +69,11 @@ APPS = {
     "kyro-labs": {
         "bundle": "com.cubbiestream.kyro.labs",
         "min_os": "18.0",
-        "display_name": "Kyro Labs",
+        "display_name": "Kyro X Labs",
         "platform": "ios",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-labs-ios-v{version}-build{build}-rc1",
-        "source_name": "Kyro Labs",
+        "source_name": "Kyro X Labs",
         "subtitle": "Experimental builds of Kyro",
         "localized_description": (
             "Kyro Labs is the experimental edition of Kyro, used to try new "
