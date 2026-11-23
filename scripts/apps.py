@@ -82,7 +82,7 @@ APPS = {
             "keeps its own data and sign-in, and may be less stable. This "
             "unsigned beta requires your own signing and sideloading setup."
         ),
-        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro-x-labs/icon.png",
         "tint_color": "#F59E0B",
         "update_tvos_source": False,
     },
