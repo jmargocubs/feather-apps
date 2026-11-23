@@ -473,15 +473,23 @@
       ]
     },
     {
-      "name": "Kyro X Labs \u2014 Build 116",
+      "name": "Kyro X Labs \u2014 Build 117",
       "bundleIdentifier": "com.cubbiestream.kyro.labs",
       "developerName": "jmargocubs",
       "subtitle": "Experimental builds of Kyro",
       "localizedDescription": "Kyro Labs is the experimental edition of Kyro, used to try new features such as upstream Silo updates and additional media servers before they reach Kyro. It installs separately from Kyro, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-x-labs/icon.png",
       "tintColor": "#F59E0B",
-      "size": 30060063,
+      "size": 30150047,
       "versions": [
+        {
+          "version": "1.0.117",
+          "buildVersion": "117",
+          "date": "2026-11-23",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.117-build117-rc1/Kyro-Labs-1.0.117-117-ios-unsigned-arm64.ipa",
+          "size": 30150047,
+          "minOSVersion": "18.0"
+        },
         {
           "version": "1.0.116",
           "buildVersion": "116",
