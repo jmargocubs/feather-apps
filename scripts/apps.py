@@ -27,11 +27,11 @@ APPS = {
     "kyro": {
         "bundle": "com.cubbiestream.kyro",
         "min_os": "18.0",
-        "display_name": "Kyro",
+        "display_name": "Kyro X",
         "platform": "ios",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-ios-v{version}-build{build}-rc1",
-        "source_name": "Kyro",
+        "source_name": "Kyro X",
         "subtitle": "Self-hosted media streaming client",
         "localized_description": (
             "Kyro is a customized iOS streaming client based on Silo, bringing "
