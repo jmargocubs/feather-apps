@@ -12,7 +12,7 @@ tag, title, notes, IPA asset name, download URL, catalog entry and the
 
 | App (id) | Listing | Local Mac | GitHub Actions (build + publish) |
 |---|---|---|---|
-| `kyro` | Kyro X iOS — Build N | build with the Kyro package script, then `publish_ipa.py --approved` | Kyro → *Cloud unsigned IPA* (platform `ios`, ref `kyro/ios-recovered`) with **publish_approved ✓** → *Publish approved IPA and update catalog* runs automatically |
+| `kyro` | Kyro X — Build N | build with the Kyro package script, then `publish_ipa.py --approved` | Kyro → *Cloud unsigned IPA* (platform `ios`, ref `kyro/ios-recovered`) with **publish_approved ✓** → *Publish approved IPA and update catalog* runs automatically |
 | `kyro-tvos` | Kyro X tvOS — Build N | same, `--app kyro-tvos` | same, platform `tvos`, ref `kyro/tvos-recovered` |
 | `zepzi` | Zepzi — Build N | build, then `publish_ipa.py --app zepzi --approved` | flippy → *Build Unsigned iOS Beta IPA* (manual) on `main` with **publish_approved ✓** |
 | `sunnymeadow` | Sunny Meadow — Build N | build, then `publish_ipa.py --app sunnymeadow --approved` | sunnyhill → *Build Unsigned iOS Beta IPA* (manual) on `main` or the active development branch with **publish_approved ✓** |

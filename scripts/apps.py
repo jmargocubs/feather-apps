@@ -27,14 +27,14 @@ APPS = {
     "kyro": {
         "bundle": "com.cubbiestream.kyro",
         "min_os": "18.0",
-        "display_name": "Kyro X iOS",
+        "display_name": "Kyro X",
         "platform": "ios",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-ios-v{version}-build{build}-rc1",
         "asset_template": "Kyro-iOS-v{version}-Build{build}-Unsigned.ipa",
         "source_repo": "jmargocubs/Kyro",
         "version_aligned": True,
-        "source_name": "Kyro X iOS",
+        "source_name": "Kyro X",
         "subtitle": "Kyro X for iPhone: Silo media, Live TV, Sports, Radio and Podcasts",
         "localized_description": (
             "Kyro X is the iPhone streaming client built on Silo. It brings "

@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from apps import ACTIVE_BUNDLES, APP_IDS, APPS, RETIRED_APPS, RETIRED_BUNDLES  # noqa: E402
 
 ACTIVE = {
-    "com.cubbiestream.kyro": "Kyro X iOS",
+    "com.cubbiestream.kyro": "Kyro X",
     "com.cubbiestream.kyro.tvos": "Kyro X tvOS",
     "app.flippy.reader": "Zepzi",
     "com.sunnymeadow.app.beta": "Sunny Meadow",

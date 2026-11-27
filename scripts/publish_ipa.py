@@ -363,7 +363,7 @@ def rewrite_source_header() -> None:
     data = json.loads(source_path.read_text())
     data["subtitle"] = "Kyro X (iPhone and Apple TV), Zepzi and Sunny Meadow beta builds"
     data["description"] = (
-        "App source for Kyro X iOS, Kyro X tvOS, Zepzi and Sunny Meadow. "
+        "App source for Kyro X, Kyro X tvOS, Zepzi and Sunny Meadow. "
         "Beta IPAs are unsigned and hosted on GitHub Releases; use any signing "
         "or sideloading app that reads the standard source.json format. "
         "Listings show App Name — Build N; the installed app name comes from "

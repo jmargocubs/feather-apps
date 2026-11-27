@@ -42,7 +42,7 @@ class CatalogListingNameTests(unittest.TestCase):
             {"version": "1.0.0", "buildVersion": "101"},
             {"version": "1.0.0", "buildVersion": "100"},
         ]
-        self.assertEqual(current_listing_name("kyro", versions, "1"), "Kyro X iOS — Build 101")
+        self.assertEqual(current_listing_name("kyro", versions, "1"), "Kyro X — Build 101")
 
     def test_publish_sets_listing_name_and_preserves_history(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -78,7 +78,7 @@ class CatalogListingNameTests(unittest.TestCase):
             kyro = next(
                 app for app in after["apps"] if app["bundleIdentifier"] == "com.cubbiestream.kyro"
             )
-            self.assertEqual(kyro["name"], "Kyro X iOS — Build 1001")
+            self.assertEqual(kyro["name"], "Kyro X — Build 1001")
             self.assertEqual(len(kyro["versions"]), history_len + 1)
             self.assertEqual(kyro["versions"][1]["downloadURL"], first_url)
             self.assertEqual(kyro["bundleIdentifier"], "com.cubbiestream.kyro")
@@ -136,7 +136,7 @@ class CatalogListingNameTests(unittest.TestCase):
                 app for app in mid["apps"] if app["bundleIdentifier"] == "com.cubbiestream.kyro"
             )
             self.assertEqual(
-                kyro_mid["name"], f"Kyro X iOS — Build {head['buildVersion']}"
+                kyro_mid["name"], f"Kyro X — Build {head['buildVersion']}"
             )
             self.assertEqual(kyro_mid["versions"][0], head)
 

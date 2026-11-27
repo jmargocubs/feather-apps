@@ -18,7 +18,7 @@ Exactly four active listings (consolidated 2026-11-27):
 
 | Listing | Bundle ID | App ID | Development branch | IPAs hosted in |
 | --- | --- | --- | --- | --- |
-| Kyro X iOS — Build N | `com.cubbiestream.kyro` | `kyro` | `jmargocubs/Kyro` → `kyro/ios-recovered` | `jmargocubs/Kyro` |
+| Kyro X — Build N | `com.cubbiestream.kyro` | `kyro` | `jmargocubs/Kyro` → `kyro/ios-recovered` | `jmargocubs/Kyro` |
 | Kyro X tvOS — Build N | `com.cubbiestream.kyro.tvos` | `kyro-tvos` | `jmargocubs/Kyro` → `kyro/tvos-recovered` | `jmargocubs/Kyro` |
 | Zepzi — Build N | `app.flippy.reader` | `zepzi` | `jmargocubs/flippy` → `main` | `jmargocubs/feather-apps` |
 | Sunny Meadow — Build N | `com.sunnymeadow.app.beta` | `sunnymeadow` | `jmargocubs/sunnyhill` → `feature/build-50-recovery-polish` | `jmargocubs/feather-apps` |
