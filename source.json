@@ -1,7 +1,7 @@
 {
   "name": "jmargocubs Apps",
   "subtitle": "Kyro X (iPhone and Apple TV), Zepzi and Sunny Meadow beta builds",
-  "description": "App source for Kyro X iOS, Kyro X tvOS, Zepzi and Sunny Meadow. Beta IPAs are unsigned and hosted on GitHub Releases; use any signing or sideloading app that reads the standard source.json format. Listings show App Name \u2014 Build N; the installed app name comes from each IPA and is not changed by this catalog.",
+  "description": "App source for Kyro X, Kyro X tvOS, Zepzi and Sunny Meadow. Beta IPAs are unsigned and hosted on GitHub Releases; use any signing or sideloading app that reads the standard source.json format. Listings show App Name \u2014 Build N; the installed app name comes from each IPA and is not changed by this catalog.",
   "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
   "headerURL": null,
   "website": "https://jmargocubs.github.io/feather-apps/",
@@ -9,15 +9,23 @@
   "featuredApps": [],
   "apps": [
     {
-      "name": "Kyro X \u2014 Build 136",
+      "name": "Kyro X \u2014 Build 141",
       "bundleIdentifier": "com.cubbiestream.kyro",
       "developerName": "jmargocubs",
       "subtitle": "Kyro X for iPhone: Silo media, Live TV, Sports, Radio and Podcasts",
       "localizedDescription": "Kyro X is the iPhone streaming client built on Silo. It brings your self-hosted movies and shows together with Live TV and guide, a Sports Hub, internet Radio and Podcasts. Same app and bundle as earlier Kyro builds, so existing installs update in place. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 45420600,
+      "size": 45676615,
       "versions": [
+        {
+          "version": "1.0.141",
+          "buildVersion": "141",
+          "date": "2026-11-27",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-ios-v1.0.141-build141-rc1/Kyro-iOS-v1.0.141-Build141-Unsigned.ipa",
+          "size": 45676615,
+          "minOSVersion": "18.0"
+        },
         {
           "version": "1.0.136",
           "buildVersion": "136",
