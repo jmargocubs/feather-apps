@@ -44,19 +44,20 @@ descriptions, icons, bundle IDs and release tag formats.
 
 ## Publishing
 
-- **Local publish (all apps):** a verified IPA is published with
-  `scripts/publish_ipa.py`, which uploads the release asset, updates
-  `source.json` (and `tvos-source.json` for Apple TV apps), and pushes `main`.
+Builds start manually; a build publishes automatically **only when approved for
+distribution** (`--approved` locally, the `publish_approved` checkbox in Actions).
+Local Mac and GitHub Actions use the same publisher (`scripts/publish_ipa.py`), so
+releases and catalog entries are identical either way. Full table and rules:
+[docs/publishing.md](docs/publishing.md).
 
-  ```sh
-  python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
-    --app kyro-tvos --version 1.0.104 --build 104
-  ```
+```sh
+# plan only (validates, prints exactly what would be published, uploads nothing)
+python3 scripts/publish_ipa.py /absolute/path/to/App.ipa --app kyro-tvos --version 1.0.109 --build 109
+# publish an approved build
+python3 scripts/publish_ipa.py /absolute/path/to/App.ipa --app kyro-tvos --version 1.0.109 --build 109 --approved
+```
 
-- **Kyro cloud builds:** `jmargocubs/Kyro` → *Publish approved IPA and update
-  catalog* runs after a successful *Cloud unsigned IPA* build from an allowed
-  Kyro branch and updates the matching Kyro listing.
-- Pushing `main` deploys GitHub Pages; *Validate* checks the catalog on every push.
+- Pushing `main` deploys GitHub Pages; *Validate* checks the catalog and publish parity on every push.
 
 See [docs/release-process.md](docs/release-process.md),
 [docs/catalog-listing-names.md](docs/catalog-listing-names.md) and

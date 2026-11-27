@@ -1,5 +1,8 @@
 # Beta release process
 
+> **Superseded 2026-11-27:** publish only builds approved for distribution, with
+> `publish_ipa.py --approved` or the `publish_approved` checkbox. See [publishing.md](publishing.md).
+
 ## Preferred path: shared source auto-publish
 
 Standing policy: after a verified unsigned IPA build succeeds, publish immediately with

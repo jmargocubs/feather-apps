@@ -31,6 +31,9 @@ APPS = {
         "platform": "ios",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-ios-v{version}-build{build}-rc1",
+        "asset_template": "Kyro-iOS-v{version}-Build{build}-Unsigned.ipa",
+        "source_repo": "jmargocubs/Kyro",
+        "version_aligned": True,
         "source_name": "Kyro X iOS",
         "subtitle": "Kyro X for iPhone: Silo media, Live TV, Sports, Radio and Podcasts",
         "localized_description": (
@@ -51,6 +54,9 @@ APPS = {
         "platform": "tvos",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-tvos-v{version}-build{build}-rc1",
+        "asset_template": "Kyro-tvOS-v{version}-Build{build}-Unsigned.ipa",
+        "source_repo": "jmargocubs/Kyro",
+        "version_aligned": True,
         "source_name": "Kyro X tvOS",
         "subtitle": "Kyro X for Apple TV: Live TV, guide and Sports",
         "localized_description": (
@@ -69,6 +75,9 @@ APPS = {
         "platform": "ios",
         "release_repo": "jmargocubs/feather-apps",
         "tag_template": "zepzi-v{version}-b{build}",
+        "asset_template": "Zepzi-v{version}-b{build}-unsigned.ipa",
+        "source_repo": "jmargocubs/flippy",
+        "version_aligned": False,
         "source_name": "Zepzi",
         "subtitle": "Comic reader for Komga",
         "localized_description": (
@@ -89,6 +98,9 @@ APPS = {
         "platform": "ios",
         "release_repo": "jmargocubs/feather-apps",
         "tag_template": "sunnymeadow-v{version}-b{build}",
+        "asset_template": "SunnyMeadow-v{version}-b{build}-beta-unsigned.ipa",
+        "source_repo": "jmargocubs/sunnyhill",
+        "version_aligned": False,
         "source_name": "Sunny Meadow",
         "subtitle": "Private recovery and mood journaling",
         "localized_description": (
@@ -279,11 +291,92 @@ def assert_independent_version_fields(version: str, build: str | int) -> tuple[s
     return version_s, build_s
 
 
+# ---------------------------------------------------------------------------
+# Shared release metadata (audit 2026-11-27). Local Mac publishing
+# (publish_ipa.py) and every GitHub Actions publish path call publish_ipa.py,
+# which takes all of these values from here, so tag, release title/notes, IPA
+# asset name, download URL and catalog entry are identical whichever
+# environment publishes.
+# ---------------------------------------------------------------------------
+
+
+def asset_name_for(app: str, version: str, build: str | int) -> str:
+    """Canonical IPA asset name on the GitHub release (input file name is irrelevant)."""
+    return APPS[app]["asset_template"].format(version=version, build=build)
+
+
+def release_title_for(app: str, version: str, build: str | int) -> str:
+    return f"{APPS[app]['display_name']} {version} (Build {build}) Beta"
+
+
+def release_notes_for(
+    app: str,
+    version: str,
+    build: str | int,
+    *,
+    size: int,
+    sha256: str,
+    source_commit: str | None = None,
+    extra_notes: str | None = None,
+) -> str:
+    meta = APPS[app]
+    lines = [
+        f"Unsigned {meta['platform']} beta for compatible signing apps.",
+        "",
+        f"- Bundle: `{meta['bundle']}`",
+        f"- Version: {version} ({build})",
+        f"- Minimum OS: {meta['min_os']}",
+        f"- Size: {size} bytes",
+        f"- SHA-256: `{sha256}`",
+        f"- Catalog listing title: `{catalog_listing_name(app, build)}`",
+    ]
+    if source_commit:
+        lines.append(f"- Source: `{meta['source_repo']}@{source_commit}`")
+    lines += [
+        "",
+        "Re-sign with your own certificate before install. No source code or "
+        "signing material is included. The installed app name inside the IPA "
+        "is unchanged.",
+    ]
+    if extra_notes and extra_notes.strip():
+        lines += ["", "## Release notes", "", extra_notes.strip()]
+    return "\n".join(lines)
+
+
+def release_target_for(app: str, source_commit: str | None) -> str | None:
+    """Tag target commit: only when the source lives in the release repository."""
+    meta = APPS[app]
+    if source_commit and meta["source_repo"] == meta["release_repo"]:
+        return source_commit
+    return None
+
+
+def visible_version(version: str, build: str | int) -> str:
+    """major.minor.<build> form (e.g. 1.0.0 + 105 -> 1.0.105)."""
+    parts = str(version).split(".")
+    return f"{parts[0]}.{parts[1] if len(parts) > 1 else 0}.{build}"
+
+
+def assert_version_policy(app: str, version: str, build: str | int) -> None:
+    """Per-app version rule, enforced identically by local and cloud publishing.
+
+    All apps: numeric marketing version and numeric build (independent fields).
+    Kyro X iOS / tvOS additionally require major.minor.<build> (version_aligned),
+    which is what their build scripts and cloud builds stamp.
+    """
+    assert_independent_version_fields(str(version), str(build))
+    if APPS[app].get("version_aligned") and str(version) != visible_version(version, build):
+        raise ValueError(
+            f"{app} requires marketing version major.minor.{build} "
+            f"(got {version!r}; expected {visible_version(version, build)!r})"
+        )
+
+
 def main(argv: list[str]) -> int:
     if len(argv) == 1 or argv[1] in {"-h", "--help"}:
         print(
             "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|"
-            "listing-name <app> <build>|tag <app> <version> <build>",
+            "listing-name <app> <build>|tag|asset-name|check-version|release-title <app> <version> <build>|visible-version <version> <build>",
             file=sys.stderr,
         )
         return 2
@@ -293,6 +386,26 @@ def main(argv: list[str]) -> int:
         return 0
     if cmd == "choice-re":
         print(APP_CHOICE_RE)
+        return 0
+    if cmd == "visible-version" and len(argv) == 4:
+        print(visible_version(argv[2], argv[3]))
+        return 0
+    if cmd in {"asset-name", "check-version", "release-title"} and len(argv) == 5:
+        app, version, build = argv[2], argv[3], argv[4]
+        if app not in APPS:
+            print(f"unknown app: {app}", file=sys.stderr)
+            return 1
+        if cmd == "asset-name":
+            print(asset_name_for(app, version, build))
+        elif cmd == "release-title":
+            print(release_title_for(app, version, build))
+        else:
+            try:
+                assert_version_policy(app, version, build)
+            except ValueError as exc:
+                print(exc, file=sys.stderr)
+                return 1
+            print("version OK")
         return 0
     if cmd == "retired-bundles":
         print(" ".join(sorted(RETIRED_BUNDLES)))
@@ -328,7 +441,7 @@ def main(argv: list[str]) -> int:
         return 0
     print(
         "usage: apps.py ids|choice-re|json|bundle <app>|minos <app>|repo <app>|"
-        "listing-name <app> <build>|tag <app> <version> <build>",
+        "listing-name <app> <build>|tag|asset-name|check-version|release-title <app> <version> <build>|visible-version <version> <build>",
         file=sys.stderr,
     )
     return 2

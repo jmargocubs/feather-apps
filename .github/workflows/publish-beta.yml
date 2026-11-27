@@ -22,6 +22,11 @@ on:
       expected_sha256: { description: "expected IPA SHA-256", required: true }
       expected_size: { description: "expected IPA size in bytes", required: true }
       staging_locator: { description: "draft release_id:asset_id (stage only)", required: false }
+      publish_approved:
+        description: "Approved for distribution (required for publish; otherwise nothing is released)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -132,6 +137,7 @@ jobs:
           ARTIFACT_NAME: ${{ inputs.artifact_name }}
           SHA: ${{ inputs.expected_sha256 }}
           SIZE: ${{ inputs.expected_size }}
+          APPROVED: ${{ inputs.publish_approved }}
         run: |
           set -euo pipefail
           [[ "$APP" =~ ^(kyro|kyro-tvos|zepzi|sunnymeadow)$ ]]
@@ -141,14 +147,13 @@ jobs:
           [[ "$ARTIFACT_NAME" =~ ^[a-z0-9][a-z0-9._-]{0,127}$ ]]
           [[ "$SHA" =~ ^[0-9a-f]{64}$ ]]
           [[ "$SIZE" =~ ^[0-9]+$ ]]
-          # Signing-app visible version must be major.minor.<build> (e.g. 1.0.105).
-          EXPECTED="$(python scripts/apps.py visible-version "$VERSION" "$BUILD")"
-          if [[ "$VERSION" != "$EXPECTED" ]]; then
-            echo "version $VERSION must equal visible marketing version $EXPECTED for build $BUILD" >&2
-            exit 1
-          fi
+          # Same per-app version policy as local publishing (apps.py assert_version_policy).
+          python scripts/apps.py check-version "$APP" "$VERSION" "$BUILD"
           if [[ "$OPERATION" == publish ]]; then
-            test -n "$NOTES"
+            if [[ "$APPROVED" != true ]]; then
+              echo "publish requires publish_approved=true (build approved for distribution)" >&2
+              exit 1
+            fi
             if [[ "$GITHUB_REF" != refs/heads/main ]]; then
               echo "publish is restricted to refs/heads/main (got $GITHUB_REF)" >&2
               exit 1
@@ -198,12 +203,11 @@ jobs:
         run: test "$(gh api "repos/$REPOSITORY" --jq .full_name)" = "$REPOSITORY"
 
   publish:
-    if: inputs.operation == 'publish' && github.ref == 'refs/heads/main'
+    if: inputs.operation == 'publish' && inputs.publish_approved && github.ref == 'refs/heads/main'
     needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
       actions: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -243,105 +247,37 @@ jobs:
           python scripts/scan_ipa.py "$IPA_PATH"
           python scripts/verify_file.py "$IPA_PATH" --sha256 "$SHA" --size "$SIZE"
           printf 'IPA_PATH=%s\n' "$IPA_PATH" >> "$GITHUB_ENV"
-      - name: Create or resume exact public beta release
+      - name: Publish with the shared publisher (same code path as local Mac publishing)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Kyro IPAs are released in jmargocubs/Kyro, which this repository's GITHUB_TOKEN
+          # cannot write; add a KYRO_PUBLISH_TOKEN secret (contents:write on Kyro) for those.
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KYRO_TOKEN: ${{ secrets.KYRO_PUBLISH_TOKEN }}
           APP: ${{ inputs.app }}
           VERSION: ${{ inputs.version }}
           BUILD: ${{ inputs.build }}
           NOTES: ${{ inputs.release_notes }}
-          REPOSITORY: ${{ github.repository }}
-          SHA: ${{ inputs.expected_sha256 }}
-          SIZE: ${{ inputs.expected_size }}
         run: |
           set -euo pipefail
-          TAG="${APP}-v${VERSION}-b${BUILD}"
-          ASSET="$(basename "$IPA_PATH")"
-          ERROR_FILE="$(mktemp)"
-          if gh api "repos/$REPOSITORY/releases/tags/$TAG" > /tmp/public-release.json 2>"$ERROR_FILE"; then
-            echo "Resuming existing public release $TAG"
-          elif grep -q '(HTTP 404)' "$ERROR_FILE"; then
-            gh release create "$TAG" "$IPA_PATH" --repo "$REPOSITORY" \
-              --title "${APP} ${VERSION} (Build ${BUILD}) Beta" --notes "$NOTES"
-            gh api "repos/$REPOSITORY/releases/tags/$TAG" > /tmp/public-release.json
-          else
-            cat "$ERROR_FILE" >&2
+          case "$APP" in
+            kyro|kyro-tvos) export GH_TOKEN="${KYRO_TOKEN:-}" ;;
+            *) export GH_TOKEN="$REPO_TOKEN" ;;
+          esac
+          if [[ -z "${GH_TOKEN:-}" ]]; then
+            echo "::error::$APP releases live in jmargocubs/Kyro; add the KYRO_PUBLISH_TOKEN secret to publish them from here (or use the Kyro cloud build with publish_approved, or local publish_ipa.py)"
             exit 1
           fi
-          python scripts/validate_release.py /tmp/public-release.json \
-            --tag "$TAG" --asset "$ASSET" --sha256 "$SHA" --size "$SIZE"
-          RELEASE_DATE="$(jq -er '.published_at[0:10]' /tmp/public-release.json)"
-          printf 'RELEASE_TAG=%s\nRELEASE_ASSET=%s\nRELEASE_DATE=%s\n' \
-            "$TAG" "$ASSET" "$RELEASE_DATE" >> "$GITHUB_ENV"
-      - name: Verify public IPA bytes and app metadata without authentication
-        env:
-          REPOSITORY: ${{ github.repository }}
-          BUNDLE: ${{ steps.appmeta.outputs.bundle }}
-          MINOS: ${{ steps.appmeta.outputs.minos }}
-          VERSION: ${{ inputs.version }}
-          BUILD: ${{ inputs.build }}
-          SHA: ${{ inputs.expected_sha256 }}
-          SIZE: ${{ inputs.expected_size }}
-        run: |
-          set -euo pipefail
-          URL="https://github.com/$REPOSITORY/releases/download/$RELEASE_TAG/$RELEASE_ASSET"
-          env -u GH_TOKEN -u GITHUB_TOKEN python scripts/verify_asset.py "$URL" \
-            --sha256 "$SHA" --size "$SIZE" --attempts 12 --interval 5 \
-            --output /tmp/public-release.ipa
-          python scripts/validate_ipa.py /tmp/public-release.ipa --bundle "$BUNDLE" \
-            --version "$VERSION" --build "$BUILD" --minos "$MINOS"
-      - name: Create or resume source-update PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APP: ${{ inputs.app }}
-          VERSION: ${{ inputs.version }}
-          BUILD: ${{ inputs.build }}
-          SIZE: ${{ inputs.expected_size }}
-        run: |
-          set -euo pipefail
-          python scripts/update_source.py --idempotent --app "$APP" --version "$VERSION" \
-            --build "$BUILD" --size "$SIZE" --tag "$RELEASE_TAG" --asset "$RELEASE_ASSET" \
-            --date "$RELEASE_DATE"
-          if git diff --quiet -- source.json; then
-            echo "source.json already contains the exact release entry; recovery is complete"
-            exit 0
-          fi
-          python scripts/validate_source.py source.json
-          python -m unittest discover tests
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          BRANCH="source-update-${APP}-${VERSION}-b${BUILD}"
-          PRS="$(gh pr list --repo "${{ github.repository }}" --base main --head "$BRANCH" \
-            --state all --limit 10 --json number,url,state,mergedAt)"
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            git fetch origin "$BRANCH"
-            git show FETCH_HEAD:source.json > /tmp/existing-source.json
-            if ! cmp -s source.json /tmp/existing-source.json; then
-              echo "existing recovery branch does not contain the exact expected source.json" >&2
-              exit 1
-            fi
-            OPEN_URL="$(jq -r '[.[] | select(.state == "OPEN")][0].url // empty' <<<"$PRS")"
-            if [[ -n "$OPEN_URL" ]]; then
-              echo "matching source-update PR already exists: $OPEN_URL"
-              exit 0
-            fi
-            CLOSED_NUMBER="$(jq -r '[.[] | select(.state == "CLOSED" and .mergedAt == null)][0].number // empty' <<<"$PRS")"
-            if [[ -n "$CLOSED_NUMBER" ]]; then
-              gh pr reopen "$CLOSED_NUMBER" --repo "${{ github.repository }}"
-              exit 0
-            fi
-            if jq -e 'any(.[]; .mergedAt != null)' <<<"$PRS" >/dev/null; then
-              echo "source-update PR was merged but main lacks the expected source entry" >&2
-              exit 1
-            fi
-          else
-            git checkout -b "$BRANCH"
-            git add source.json
-            git commit -m "Update source for $APP $VERSION build $BUILD"
-            git push origin "$BRANCH"
-          fi
-          gh pr create --repo "${{ github.repository }}" --base main --head "$BRANCH" \
-              --title "Source update: $APP $VERSION build $BUILD" \
-              --body "Automated source update after approved release. The release asset was fetched without authentication and matched the approved SHA-256, size, and app metadata."
-      - name: Await source-update PR review and merge
-        run: echo "Source-update PR created. Merge it normally; no branch-protection or environment bypass is used."
+          python scripts/publish_ipa.py "$IPA_PATH" --app "$APP" --version "$VERSION" \
+            --build "$BUILD" --notes "$NOTES" --approved
+
+  # Catalog commits pushed with GITHUB_TOKEN do not trigger push workflows, so deploy
+  # Pages explicitly after a successful publish.
+  deploy-pages:
+    needs: publish
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-pages.yml

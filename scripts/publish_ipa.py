@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Publish a verified unsigned IPA to the shared AltStore-compatible source.
 
-Standing policy: after a successful verified IPA build, run this script. It
-uploads the IPA to the app's release repository, updates feather-apps
-source.json (and tvos-source.json when needed), verifies the public download
-SHA-256, and pushes the catalog update. No separate publish approval is
-required. Failed or unverified builds must not call this script.
+This is the single publishing engine for all four active apps. Local Mac
+publishing and every GitHub Actions publish path (Kyro publish-approved-ipa,
+Zepzi / Sunny Meadow build workflows, feather-apps Publish Beta) run this
+script, so release tag, title, notes, IPA asset name, download URL and catalog
+entry are identical in every environment (see apps.py "Shared release
+metadata").
+
+Approval gate: nothing is uploaded or pushed unless --approved is passed, and
+--approved may only be passed for a build approved for distribution. Without
+it the script validates the IPA, prints the exact publish plan (including the
+catalog entry it would write) and exits 3 without publishing.
 
 Catalog apps[].name is set to "App Name — Build N" for repository listings in
 compatible signing apps. Installed IPA display names are never rewritten here.
@@ -30,12 +36,20 @@ from apps import (  # noqa: E402
     APP_IDS,
     APPS,
     SOURCE_REPO,
+    asset_name_for,
+    assert_version_policy,
     bundle_for,
+    catalog_listing_name,
     download_url_for,
     min_os_for,
+    release_notes_for,
     release_repo_for,
+    release_target_for,
+    release_title_for,
     tag_for,
 )
+
+NOT_APPROVED_EXIT = 3
 
 
 SENSITIVE_NAME_FRAGMENTS = (
@@ -83,11 +97,9 @@ def refuse_if_sensitive(path: pathlib.Path) -> None:
 
 
 def validate_and_scan(ipa: pathlib.Path, app: str, version: str, build: str) -> dict:
-    from apps import assert_independent_version_fields
-
-    # Marketing version and build stay independent; IPA short version must match
-    # the declared marketing version, and CFBundleVersion must match build.
-    assert_independent_version_fields(version, build)
+    # Per-app version policy (shared with every publish path); the IPA short
+    # version must match the declared marketing version and CFBundleVersion the build.
+    assert_version_policy(app, version, build)
     bundle = bundle_for(app)
     min_os = min_os_for(app)
     validate = run(
@@ -105,9 +117,9 @@ def validate_and_scan(ipa: pathlib.Path, app: str, version: str, build: str) -> 
             min_os,
         ]
     )
-    print(validate.stdout, end="")
+    print(validate.stdout, end="", file=sys.stderr)
     scan = run([sys.executable, str(ROOT / "scripts" / "scan_ipa.py"), str(ipa)])
-    print(scan.stdout, end="")
+    print(scan.stdout, end="", file=sys.stderr)
     size = ipa.stat().st_size
     digest = sha256_file(ipa)
     return {"bundle": bundle, "min_os": min_os, "size": size, "sha256": digest}
@@ -135,6 +147,7 @@ def create_or_resume_release(
     asset_name: str,
     digest: str,
     size: int,
+    target: str | None = None,
 ) -> dict:
     existing = release_exists(repo, tag)
     staged = ipa
@@ -165,6 +178,7 @@ def create_or_resume_release(
                     notes,
                     "--prerelease",
                 ]
+                + (["--target", target] if target else [])
             )
             existing = release_exists(repo, tag)
             if existing is None:
@@ -303,7 +317,23 @@ def commit_and_push_source(app: str, version: str, build: str, dry_run: bool) ->
 
     message = f"Publish {app} {version} build {build} to shared source catalog"
     run(["git", "commit", "-m", message], cwd=ROOT)
-    run(["git", "push", "origin", "HEAD:main"], cwd=ROOT)
+    # Several environments can write the catalog; rebase onto main and retry on a
+    # non-fast-forward push. A rebase conflict aborts instead of overwriting.
+    for attempt in range(1, 6):
+        pushed = run(["git", "push", "origin", "HEAD:main"], cwd=ROOT, check=False)
+        if pushed.returncode == 0:
+            break
+        if attempt == 5:
+            raise RuntimeError(f"catalog push failed after retries: {pushed.stderr or pushed.stdout}")
+        print(f"catalog push attempt {attempt} rejected; rebasing onto origin/main")
+        run(["git", "fetch", "origin", "main"], cwd=ROOT)
+        rebased = run(["git", "rebase", "origin/main"], cwd=ROOT, check=False)
+        if rebased.returncode != 0:
+            run(["git", "rebase", "--abort"], cwd=ROOT, check=False)
+            raise RuntimeError("catalog rebase conflict; refusing to overwrite another publish")
+        for path in ("source.json", "tvos-source.json"):
+            if (ROOT / path).exists():
+                run([sys.executable, str(ROOT / "scripts" / "validate_source.py"), str(ROOT / path)])
     sha = run(["git", "rev-parse", "HEAD"], cwd=ROOT).stdout.strip()
     print(f"pushed catalog update {sha}")
     return sha
@@ -342,15 +372,95 @@ def rewrite_source_header() -> None:
     source_path.write_text(json.dumps(data, indent=2) + "\n")
 
 
+def build_plan(
+    ipa: pathlib.Path,
+    app: str,
+    version: str,
+    build: str,
+    *,
+    notes: str | None = None,
+    source_commit: str | None = None,
+) -> dict:
+    """Validate the IPA and compute everything a publish would write.
+
+    Shared by --approved runs and plan-only runs, so the printed plan is exactly
+    what gets published.
+    """
+    meta = validate_and_scan(ipa, app, version, build)
+    asset_name = asset_name_for(app, version, build)
+    refuse_if_sensitive(pathlib.Path(asset_name))
+    return {
+        "app": app,
+        "platform": APPS[app]["platform"],
+        "bundle": meta["bundle"],
+        "version": version,
+        "build": build,
+        "min_os": meta["min_os"],
+        "release_repo": release_repo_for(app),
+        "tag": tag_for(app, version, build),
+        "target": release_target_for(app, source_commit),
+        "title": release_title_for(app, version, build),
+        "notes": release_notes_for(
+            app, version, build, size=meta["size"], sha256=meta["sha256"],
+            source_commit=source_commit, extra_notes=notes,
+        ),
+        "asset": asset_name,
+        "download_url": download_url_for(app, version, build, asset_name),
+        "size": meta["size"],
+        "sha256": meta["sha256"],
+        "listing_name": catalog_listing_name(app, build),
+        "source_repo": SOURCE_REPO,
+        "catalogs": ["source.json"] + (["tvos-source.json"] if APPS[app].get("update_tvos_source") else []),
+    }
+
+
+def preview_catalog_entries(plan: dict, release_date: str) -> dict:
+    """Run update_source.py against temporary copies; return the resulting entries."""
+    out = {}
+    with tempfile.TemporaryDirectory(prefix="catalog-preview-") as tmp:
+        for name in plan["catalogs"]:
+            src = ROOT / name
+            dst = pathlib.Path(tmp) / name
+            shutil.copy2(src, dst)
+            result = run(
+                [
+                    sys.executable, str(ROOT / "scripts" / "update_source.py"),
+                    "--idempotent", "--allow-create", "--source", str(dst),
+                    "--app", plan["app"], "--version", plan["version"], "--build", plan["build"],
+                    "--size", str(plan["size"]), "--tag", plan["tag"], "--asset", plan["asset"],
+                    "--download-url", plan["download_url"], "--date", release_date,
+                ],
+                check=False,
+            )
+            if result.returncode != 0:
+                raise RuntimeError(f"catalog preview failed for {name}: {result.stderr or result.stdout}")
+            data = json.loads(dst.read_text())
+            entry = next(a for a in data["apps"] if a["bundleIdentifier"] == plan["bundle"])
+            out[name] = {
+                "name": entry["name"],
+                "bundleIdentifier": entry["bundleIdentifier"],
+                "size": entry["size"],
+                "head": entry["versions"][0],
+            }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("ipa", type=pathlib.Path)
     parser.add_argument("--app", required=True, choices=list(APP_IDS))
     parser.add_argument("--version", required=True)
     parser.add_argument("--build", required=True)
-    parser.add_argument("--notes")
-    parser.add_argument("--asset-name")
-    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--notes", help="optional extra release notes (appended to the standard notes)")
+    parser.add_argument("--source-commit", help="source commit SHA the IPA was built from")
+    parser.add_argument(
+        "--approved",
+        action="store_true",
+        help="the build is approved for distribution: upload the release and update the catalog",
+    )
+    parser.add_argument("--asset-name", help=argparse.SUPPRESS)  # deprecated; name is canonical
+    parser.add_argument("--dry-run", action="store_true", help="plan only (same as omitting --approved)")
+    parser.add_argument("--release-date", help="date used in the plan-only catalog preview")
     parser.add_argument("--skip-git", action="store_true", help="update local catalog only")
     args = parser.parse_args()
 
@@ -363,74 +473,51 @@ def main() -> int:
     app = args.app
     version = args.version
     build = str(args.build)
-    meta = validate_and_scan(ipa, app, version, build)
-    asset_name = args.asset_name or ipa.name
-    refuse_if_sensitive(pathlib.Path(asset_name))
-
-    tag = tag_for(app, version, build)
-    repo = release_repo_for(app)
-    download_url = download_url_for(app, version, build, asset_name)
-    title = f"{APPS[app]['display_name']} {version} (Build {build}) Beta"
-    notes = args.notes or (
-        f"Unsigned {APPS[app]['platform']} beta for compatible signing apps.\n\n"
-        f"- Bundle: `{meta['bundle']}`\n"
-        f"- Version: {version} ({build})\n"
-        f"- Minimum OS: {meta['min_os']}\n"
-        f"- Size: {meta['size']} bytes\n"
-        f"- SHA-256: `{meta['sha256']}`\n"
-        f"- Catalog listing title: `{APPS[app]['display_name']} — Build {build}`\n\n"
-        "Re-sign with your own certificate before install. No source code or "
-        "signing material is included. The installed app name inside the IPA "
-        "is unchanged."
-    )
-
-    print(
-        json.dumps(
-            {
-                "app": app,
-                "platform": APPS[app]["platform"],
-                "bundle": meta["bundle"],
-                "version": version,
-                "build": build,
-                "release_repo": repo,
-                "tag": tag,
-                "asset": asset_name,
-                "download_url": download_url,
-                "size": meta["size"],
-                "sha256": meta["sha256"],
-                "source_repo": SOURCE_REPO,
-            },
-            indent=2,
+    plan = build_plan(ipa, app, version, build, notes=args.notes, source_commit=args.source_commit)
+    if args.asset_name and args.asset_name != plan["asset"]:
+        print(
+            f"note: --asset-name {args.asset_name!r} ignored; canonical asset name is {plan['asset']!r}",
+            file=sys.stderr,
         )
-    )
 
-    if args.dry_run:
-        print("dry-run: validation passed; skipping release upload and git push")
-        return 0
+    if args.dry_run or not args.approved:
+        plan["catalog_preview"] = preview_catalog_entries(plan, args.release_date or date.today().isoformat())
+        print(json.dumps(plan, indent=2))
+        if args.dry_run:
+            print("dry-run: validation passed; nothing uploaded or pushed")
+            return 0
+        print(
+            "NOT PUBLISHED: --approved was not given. Re-run with --approved only for a build "
+            "approved for distribution.",
+            file=sys.stderr,
+        )
+        return NOT_APPROVED_EXIT
 
+    print(json.dumps(plan, indent=2))
     release = create_or_resume_release(
-        repo=repo,
-        tag=tag,
-        title=title,
-        notes=notes,
+        repo=plan["release_repo"],
+        tag=plan["tag"],
+        title=plan["title"],
+        notes=plan["notes"],
         ipa=ipa,
-        asset_name=asset_name,
-        digest=meta["sha256"],
-        size=meta["size"],
+        asset_name=plan["asset"],
+        digest=plan["sha256"],
+        size=plan["size"],
+        target=plan["target"],
     )
     release_date = (release.get("published_at") or release.get("created_at") or date.today().isoformat())[:10]
 
-    verify_public_asset(download_url, meta["sha256"], meta["size"])
+    verify_public_asset(plan["download_url"], plan["sha256"], plan["size"])
 
     rewrite_source_header()
     update_catalog(
         app=app,
         version=version,
         build=build,
-        size=meta["size"],
-        tag=tag,
-        asset=asset_name,
-        download_url=download_url,
+        size=plan["size"],
+        tag=plan["tag"],
+        asset=plan["asset"],
+        download_url=plan["download_url"],
         release_date=release_date,
     )
 
@@ -438,9 +525,9 @@ def main() -> int:
         commit_and_push_source(app, version, build, dry_run=False)
 
     print("PUBLISH OK")
-    print(f"release: https://github.com/{repo}/releases/tag/{tag}")
-    print(f"ipa: {download_url}")
-    print(f"source: https://jmargocubs.github.io/feather-apps/source.json")
+    print(f"release: https://github.com/{plan['release_repo']}/releases/tag/{plan['tag']}")
+    print(f"ipa: {plan['download_url']}")
+    print("source: https://jmargocubs.github.io/feather-apps/source.json")
     return 0
 
 

@@ -1,5 +1,8 @@
 # Shared source auto-publish policy
 
+> **Superseded 2026-11-27:** publish only builds approved for distribution, with
+> `publish_ipa.py --approved` or the `publish_approved` checkbox. See [publishing.md](publishing.md).
+
 Standing authorization for all jmargocubs Apple apps:
 
 **Whenever an IPA is successfully built and verified, publish it automatically

@@ -19,5 +19,5 @@ jobs:
           python scripts/validate_source.py tvos-source.json
       - name: Run catalog and workflow tests
         run: |
-          python -m unittest tests.test_catalog_listing_names tests.test_workflow_integration tests.test_active_catalog -v
+          python -m unittest tests.test_catalog_listing_names tests.test_workflow_integration tests.test_active_catalog tests.test_publish_parity -v
           python tests/test_pipeline.py

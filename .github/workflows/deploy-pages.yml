@@ -1,6 +1,7 @@
 name: Deploy Pages
 on:
   workflow_dispatch:
+  workflow_call:
   push:
     branches: [main]
 permissions:
@@ -17,6 +18,8 @@ jobs:
       name: github-pages
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: main  # newest catalog, also when called right after a publish
       - name: Validate catalogs before deploy (refuses retired listings)
         run: |
           python3 scripts/validate_source.py source.json

@@ -146,11 +146,15 @@ class WorkflowIntegrationTests(unittest.TestCase):
         self.assertGreaterEqual(workflow.count("actions: read"), 3)
         self.assertEqual(workflow.count("run-id: ${{ inputs.artifact_run_id }}"), 2)
         self.assertEqual(workflow.count("github-token: ${{ secrets.GITHUB_TOKEN }}"), 2)
-        self.assertIn("pull-requests: write", workflow)
         self.assertIn("token: ${{ secrets.GITHUB_TOKEN }}", workflow)
         self.assertIn("github.ref == 'refs/heads/main'", workflow)
-        self.assertIn("Create or resume exact public beta release", workflow)
-        self.assertIn("matching source-update PR already exists", workflow)
+        # Publishing goes through the shared publisher behind an explicit approval input.
+        self.assertIn("python scripts/publish_ipa.py \"$IPA_PATH\"", workflow)
+        self.assertIn("--approved", workflow)
+        self.assertIn("inputs.publish_approved", workflow)
+        self.assertIn("python scripts/apps.py check-version", workflow)
+        self.assertNotIn("visible-version", workflow)
+        self.assertIn("uses: ./.github/workflows/deploy-pages.yml", workflow)
 
 
 if __name__ == "__main__":
