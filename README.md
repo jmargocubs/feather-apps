@@ -1,28 +1,53 @@
 # jmargocubs Apps
 
-Public beta distribution source for **Kyro (iOS)**, **Kyro Apple TV (tvOS)**,
-**Zepzi**, and **Sunny Meadow**.
+App source catalog for the apps that are currently maintained and distributed as
+unsigned beta IPAs. Use any signing or sideloading app that reads the standard
+`source.json` app-source format.
 
-Format: AltStore-compatible `source.json` for compatible signing / sideloading
-apps. Repository listings use `apps[].name` in the form
-**App Name — Build N**. Installed IPA display names are unchanged.
+| Source | URL |
+| --- | --- |
+| All apps | https://jmargocubs.github.io/feather-apps/source.json |
+| Apple TV only | https://jmargocubs.github.io/feather-apps/tvos-source.json |
 
-Source URL: https://jmargocubs.github.io/feather-apps/source.json
+These URLs are permanent. The repository name is kept so existing sources keep
+working; nobody needs to re-add the source.
 
-Apple TV-only source: https://jmargocubs.github.io/feather-apps/tvos-source.json
+## Listings
 
-IPAs are hosted on GitHub Releases (`jmargocubs/Kyro` for Kyro iOS/tvOS;
-`jmargocubs/feather-apps` for Zepzi and Sunny Meadow). Builds are unsigned;
-testers re-sign with their own certificate before install.
+| Listing | Bundle ID | Role | IPAs hosted in |
+| --- | --- | --- | --- |
+| Kyro — Build N | `com.cubbiestream.kyro` | Main Kyro iPhone app (recent builds show "Kyro X" on the Home Screen) | `jmargocubs/Kyro` |
+| Kyro Apple TV — Build N | `com.cubbiestream.kyro.tvos` | Main Kyro Apple TV app (approved tvOS line) | `jmargocubs/Kyro` |
+| Kyro X Labs — Build N | `com.cubbiestream.kyro.labs` | Experimental Kyro iPhone builds, separate install | `jmargocubs/Kyro` |
+| Kyro Labs Apple TV — Build N | `com.cubbiestream.kyro.tvos.labs` | Experimental Kyro Apple TV builds, separate install | `jmargocubs/Kyro` |
+| Kyro X — Build N | `com.cubbiestream.kyrox` | Independent Kyro X rebuild, separate app | `jmargocubs/feather-apps` |
+| Zepzi — Build N | `app.flippy.reader` | Comic reader for Komga | `jmargocubs/feather-apps` |
+| Sunny Meadow — Build N | `com.sunnymeadow.app.beta` | Mood check-ins and recovery journaling | `jmargocubs/feather-apps` |
 
-## Auto-publish policy
+Listing titles always use **App Name — Build N** for the newest build. Installed
+app names come from each IPA and are never rewritten by the catalog. Bundle IDs
+never change.
 
-A successful verified IPA build automatically publishes through
-`scripts/publish_ipa.py`. No separate publish approval is required. See
-[docs/nullsign-auto-publish.md](docs/nullsign-auto-publish.md) and
-[docs/catalog-listing-names.md](docs/catalog-listing-names.md).
+`scripts/apps.py` is the single source of truth for listing names, subtitles,
+descriptions, icons, bundle IDs and release tag formats.
 
-```sh
-python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
-  --app kyro-tvos --version 1.0.0 --build 87
-```
+## Publishing
+
+- **Local publish (all apps):** a verified IPA is published with
+  `scripts/publish_ipa.py`, which uploads the release asset, updates
+  `source.json` (and `tvos-source.json` for Apple TV apps), and pushes `main`.
+
+  ```sh
+  python3 scripts/publish_ipa.py /absolute/path/to/App.ipa \
+    --app kyro-tvos --version 1.0.104 --build 104
+  ```
+
+- **Kyro cloud builds:** `jmargocubs/Kyro` → *Publish approved IPA and update
+  catalog* runs after a successful *Cloud unsigned IPA* build from an allowed
+  Kyro branch and updates the matching Kyro listing.
+- Pushing `main` deploys GitHub Pages; *Validate* checks the catalog on every push.
+
+See [docs/release-process.md](docs/release-process.md),
+[docs/catalog-listing-names.md](docs/catalog-listing-names.md) and
+[docs/nullsign-auto-publish.md](docs/nullsign-auto-publish.md) (historical file
+name; the process is signing-app neutral).

@@ -32,14 +32,14 @@ APPS = {
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-ios-v{version}-build{build}-rc1",
         "source_name": "Kyro",
-        "subtitle": "Self-hosted media streaming client",
+        "subtitle": "Main Kyro iPhone app: Silo media, Live TV, Sports, Radio and Podcasts",
         "localized_description": (
-            "Kyro is a customized iOS streaming client based on Silo, bringing "
-            "your self-hosted media library together with an enhanced IPTV "
-            "experience and Sports Hub features. Enjoy movies, TV shows, live "
-            "channels, a personalized interface, and more in one app. Built for "
-            "users who want greater control over their streaming experience. "
-            "Sports Hub features are in development."
+            "Kyro is the main iPhone edition of the Kyro streaming client, "
+            "built on Silo. It brings your self-hosted movies and shows "
+            "together with Live TV and guide, a Sports Hub, internet Radio and "
+            "Podcasts. Recent builds show the name Kyro X on the Home Screen; "
+            "this is the same app and bundle as earlier Kyro builds. This "
+            "unsigned beta requires your own signing and sideloading setup."
         ),
         "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
         "tint_color": "#4F46E5",
@@ -53,7 +53,7 @@ APPS = {
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-tvos-v{version}-build{build}-rc1",
         "source_name": "Kyro Apple TV",
-        "subtitle": "Self-hosted media streaming client for Apple TV",
+        "subtitle": "Main Kyro Apple TV app (approved tvOS line)",
         "localized_description": (
             "Kyro Apple TV is a tvOS streaming client for self-hosted media "
             "libraries, live channels, and Sports Hub features. This unsigned "
@@ -74,13 +74,14 @@ APPS = {
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-labs-ios-v{version}-build{build}-rc1",
         "source_name": "Kyro X Labs",
-        "subtitle": "Experimental builds of Kyro",
+        "subtitle": "Experimental iPhone builds of Kyro (separate install)",
         "localized_description": (
-            "Kyro Labs is the experimental edition of Kyro, used to try new "
-            "features such as upstream Silo updates and additional media "
-            "servers before they reach Kyro. It installs separately from Kyro, "
-            "keeps its own data and sign-in, and may be less stable. This "
-            "unsigned beta requires your own signing and sideloading setup."
+            "Kyro X Labs is the experimental iPhone edition of Kyro, used to "
+            "try features such as upstream Silo updates and additional media "
+            "servers before they reach the main Kyro app. It installs "
+            "separately from Kyro, keeps its own data and sign-in, and may be "
+            "less stable. This unsigned beta requires your own signing and "
+            "sideloading setup."
         ),
         "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro-x-labs/icon.png",
         "tint_color": "#F59E0B",
@@ -96,7 +97,7 @@ APPS = {
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-labs-tvos-v{version}-build{build}-rc1",
         "source_name": "Kyro Labs Apple TV",
-        "subtitle": "Experimental builds of Kyro for Apple TV",
+        "subtitle": "Experimental Apple TV builds of Kyro (separate install)",
         "localized_description": (
             "Kyro Labs Apple TV is the experimental edition of Kyro for tvOS. It "
             "installs separately from Kyro Apple TV, keeps its own data and "
@@ -155,12 +156,14 @@ APPS = {
         "release_repo": "jmargocubs/feather-apps",
         "tag_template": "kyrox-v{version}-b{build}",
         "source_name": "Kyro X",
-        "subtitle": "Independent streaming client for Jellyfin and media servers",
+        "subtitle": "Separate independent Kyro X rebuild (Jellyfin, Silo, IPTV)",
         "localized_description": (
-            "Kyro X is an independent iOS streaming client featuring local "
-            "profiles, direct Jellyfin and Silo media server integration, IPTV "
-            "support, and a cinematic playback experience. This unsigned beta "
-            "requires your own signing and sideloading setup."
+            "Kyro X (independent) is a separate, from-scratch iPhone streaming "
+            "client with local profiles, direct Jellyfin and Silo server "
+            "integration, IPTV support and a cinematic player. It is a "
+            "different app from the main Kyro listing and installs beside it, "
+            "even though both may show Kyro X on the Home Screen. This unsigned "
+            "beta requires your own signing and sideloading setup."
         ),
         "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyrox/icon.png",
         "tint_color": "#DC2626",
