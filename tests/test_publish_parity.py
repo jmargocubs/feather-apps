@@ -25,19 +25,19 @@ from apps import APPS  # noqa: E402
 
 # (app, version, build, local file name, cloud artifact file name)
 CASES = [
-    ("kyro", "1.0.140", "140", "Kyro-iOS-v1.0.140-Build140-Unsigned.ipa", "Kyro-1.0.140-140-ios-unsigned-arm64.ipa"),
+    ("kyro", "1.0.142", "142", "Kyro-iOS-v1.0.142-Build142-Unsigned.ipa", "Kyro-1.0.142-142-ios-unsigned-arm64.ipa"),
     ("kyro-tvos", "1.0.109", "109", "Kyro-tvOS-v1.0.109-Build109-Unsigned.ipa", "Kyro-1.0.109-109-tvos-unsigned-arm64.ipa"),
     ("zepzi", "1.0.0", "20", "Zepzi-1.0.0-20.ipa", "Zepzi-v1.0.0-b20-unsigned.ipa"),
     ("sunnymeadow", "0.3.51", "51", "SunnyMeadow-v0.3.51-b51-beta-unsigned.ipa", "build/SunnyMeadow.ipa"),
 ]
 EXPECTED_ASSET = {
-    "kyro": "Kyro-iOS-v1.0.140-Build140-Unsigned.ipa",
+    "kyro": "Kyro-iOS-v1.0.142-Build142-Unsigned.ipa",
     "kyro-tvos": "Kyro-tvOS-v1.0.109-Build109-Unsigned.ipa",
     "zepzi": "Zepzi-v1.0.0-b20-unsigned.ipa",
     "sunnymeadow": "SunnyMeadow-v0.3.51-b51-beta-unsigned.ipa",
 }
 EXPECTED_TAG = {
-    "kyro": "kyro-ios-v1.0.140-build140-rc1",
+    "kyro": "kyro-ios-v1.0.142-build142-rc1",
     "kyro-tvos": "kyro-tvos-v1.0.109-build109-rc1",
     "zepzi": "zepzi-v1.0.0-b20",
     "sunnymeadow": "sunnymeadow-v0.3.51-b51",
@@ -127,8 +127,8 @@ class PublishParityTests(unittest.TestCase):
 
     def test_dry_run_and_plan_only_never_publish(self):
         ipa = self.dir / "k.ipa"
-        make_ipa(ipa, "kyro", "1.0.140", "140")
-        r = self.plan(ipa, "kyro", "1.0.140", "140", "--dry-run")
+        make_ipa(ipa, "kyro", "1.0.142", "142")
+        r = self.plan(ipa, "kyro", "1.0.142", "142", "--dry-run")
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertFalse(self.gh_log.exists())
 
