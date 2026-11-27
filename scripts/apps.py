@@ -8,7 +8,7 @@ import re
 import sys
 
 # Hosting:
-# - Kyro iOS / tvOS IPAs live on jmargocubs/Kyro releases.
+# - Kyro X iOS / tvOS IPAs live on jmargocubs/Kyro releases.
 # - Zepzi / Sunny Meadow IPAs live on jmargocubs/feather-apps releases.
 # Catalog metadata always lives in jmargocubs/feather-apps source.json
 # (AltStore-compatible source for compatible source clients).
@@ -27,18 +27,17 @@ APPS = {
     "kyro": {
         "bundle": "com.cubbiestream.kyro",
         "min_os": "18.0",
-        "display_name": "Kyro",
+        "display_name": "Kyro X iOS",
         "platform": "ios",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-ios-v{version}-build{build}-rc1",
-        "source_name": "Kyro",
-        "subtitle": "Main Kyro iPhone app: Silo media, Live TV, Sports, Radio and Podcasts",
+        "source_name": "Kyro X iOS",
+        "subtitle": "Kyro X for iPhone: Silo media, Live TV, Sports, Radio and Podcasts",
         "localized_description": (
-            "Kyro is the main iPhone edition of the Kyro streaming client, "
-            "built on Silo. It brings your self-hosted movies and shows "
-            "together with Live TV and guide, a Sports Hub, internet Radio and "
-            "Podcasts. Recent builds show the name Kyro X on the Home Screen; "
-            "this is the same app and bundle as earlier Kyro builds. This "
+            "Kyro X is the iPhone streaming client built on Silo. It brings "
+            "your self-hosted movies and shows together with Live TV and guide, "
+            "a Sports Hub, internet Radio and Podcasts. Same app and bundle as "
+            "earlier Kyro builds, so existing installs update in place. This "
             "unsigned beta requires your own signing and sideloading setup."
         ),
         "icon_url": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
@@ -48,14 +47,14 @@ APPS = {
     "kyro-tvos": {
         "bundle": "com.cubbiestream.kyro.tvos",
         "min_os": "26.0",
-        "display_name": "Kyro Apple TV",
+        "display_name": "Kyro X tvOS",
         "platform": "tvos",
         "release_repo": "jmargocubs/Kyro",
         "tag_template": "kyro-tvos-v{version}-build{build}-rc1",
-        "source_name": "Kyro Apple TV",
-        "subtitle": "Main Kyro Apple TV app (approved tvOS line)",
+        "source_name": "Kyro X tvOS",
+        "subtitle": "Kyro X for Apple TV: Live TV, guide and Sports",
         "localized_description": (
-            "Kyro Apple TV is a tvOS streaming client for self-hosted media "
+            "Kyro X tvOS is the Apple TV streaming client for self-hosted media "
             "libraries, live channels, and Sports Hub features. This unsigned "
             "beta requires your own signing and sideloading setup."
         ),
@@ -63,6 +62,55 @@ APPS = {
         "tint_color": "#4F46E5",
         "update_tvos_source": True,
     },
+    "zepzi": {
+        "bundle": "app.flippy.reader",
+        "min_os": "18.0",
+        "display_name": "Zepzi",
+        "platform": "ios",
+        "release_repo": "jmargocubs/feather-apps",
+        "tag_template": "zepzi-v{version}-b{build}",
+        "source_name": "Zepzi",
+        "subtitle": "Comic reader for Komga",
+        "localized_description": (
+            "Zepzi is a colorful, customizable comic-reading app for iPhone, "
+            "built for readers who host their collections with Komga. Explore "
+            "your library, enjoy a smooth reading experience, track your "
+            "progress, unlock achievements, and personalize your adventure "
+            "with unique themes."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/zepzi/icon.png",
+        "tint_color": "#4F46E5",
+        "update_tvos_source": False,
+    },
+    "sunnymeadow": {
+        "bundle": "com.sunnymeadow.app.beta",
+        "min_os": "17.0",
+        "display_name": "Sunny Meadow",
+        "platform": "ios",
+        "release_repo": "jmargocubs/feather-apps",
+        "tag_template": "sunnymeadow-v{version}-b{build}",
+        "source_name": "Sunny Meadow",
+        "subtitle": "Private recovery and mood journaling",
+        "localized_description": (
+            "Sunny Meadow is a calm, private iPhone app for mood check-ins and "
+            "Recovery Journeys. Track how you feel, keep gentle recovery "
+            "journeys with your own intention, and watch a Living Tree grow as "
+            "you show up. Personal data stays on your device. This beta build "
+            "is unsigned; testers must use their own signing setup."
+        ),
+        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/sunnymeadow/icon.png",
+        "tint_color": "#EA580C",
+        "update_tvos_source": False,
+    },
+}
+
+# Retired listings (audit 2026-11-27, approved by Jon). Removed from the catalog
+# only: their source code, tags, GitHub releases and historical IPA assets are kept.
+# They are deliberately NOT in APPS, so no script, CLI choice or workflow can publish
+# them, and validate_source.py / update_source.py refuse any catalog that contains
+# one of these bundle IDs. Re-activating one requires an explicit decision and a
+# code change here.
+RETIRED_APPS = {
     # Kyro Labs: experimental builds of Kyro on its own bundle ID, so it installs beside stable
     # Kyro and never replaces it. Its tags, listing, versions and builds are tracked separately
     # (source.json is keyed by bundle ID). Never reuse "kyro"'s bundle, tag template or listing.
@@ -108,46 +156,6 @@ APPS = {
         "tint_color": "#F59E0B",
         "update_tvos_source": True,
     },
-    "zepzi": {
-        "bundle": "app.flippy.reader",
-        "min_os": "18.0",
-        "display_name": "Zepzi",
-        "platform": "ios",
-        "release_repo": "jmargocubs/feather-apps",
-        "tag_template": "zepzi-v{version}-b{build}",
-        "source_name": "Zepzi",
-        "subtitle": "Comic reader for Komga",
-        "localized_description": (
-            "Zepzi is a colorful, customizable comic-reading app for iPhone, "
-            "built for readers who host their collections with Komga. Explore "
-            "your library, enjoy a smooth reading experience, track your "
-            "progress, unlock achievements, and personalize your adventure "
-            "with unique themes."
-        ),
-        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/zepzi/icon.png",
-        "tint_color": "#4F46E5",
-        "update_tvos_source": False,
-    },
-    "sunnymeadow": {
-        "bundle": "com.sunnymeadow.app.beta",
-        "min_os": "17.0",
-        "display_name": "Sunny Meadow",
-        "platform": "ios",
-        "release_repo": "jmargocubs/feather-apps",
-        "tag_template": "sunnymeadow-v{version}-b{build}",
-        "source_name": "Sunny Meadow",
-        "subtitle": "Private recovery and mood journaling",
-        "localized_description": (
-            "Sunny Meadow is a calm, private iPhone app for mood check-ins and "
-            "Recovery Journeys. Track how you feel, keep gentle recovery "
-            "journeys with your own intention, and watch a Living Tree grow as "
-            "you show up. Personal data stays on your device. This beta build "
-            "is unsigned; testers must use their own signing setup."
-        ),
-        "icon_url": "https://jmargocubs.github.io/feather-apps/assets/sunnymeadow/icon.png",
-        "tint_color": "#EA580C",
-        "update_tvos_source": False,
-    },
     "kyrox": {
         "bundle": "com.cubbiestream.kyrox",
         "min_os": "18.0",
@@ -170,6 +178,24 @@ APPS = {
         "update_tvos_source": False,
     },
 }
+RETIRED_BUNDLES = frozenset(meta["bundle"] for meta in RETIRED_APPS.values())
+
+# The catalog carries exactly these active listings (audit 2026-11-27).
+ACTIVE_BUNDLES = frozenset(meta["bundle"] for meta in APPS.values())
+TVOS_SOURCE_BUNDLES = frozenset(
+    meta["bundle"] for meta in APPS.values() if meta.get("update_tvos_source")
+)
+
+
+def assert_catalog_allowed(data: dict, *, tvos: bool = False) -> None:
+    """Refuse a catalog containing retired or unknown listings."""
+    allowed = TVOS_SOURCE_BUNDLES if tvos else ACTIVE_BUNDLES
+    for app in data.get("apps", []):
+        bundle = app.get("bundleIdentifier")
+        if bundle in RETIRED_BUNDLES:
+            raise ValueError(f"retired listing {bundle} must not be in the catalog")
+        if bundle not in allowed:
+            raise ValueError(f"unknown listing {bundle} is not an active catalog app")
 
 APP_IDS = tuple(sorted(APPS))
 APP_CHOICE_RE = "^(?:%s)$" % "|".join(APP_IDS)
@@ -267,6 +293,9 @@ def main(argv: list[str]) -> int:
         return 0
     if cmd == "choice-re":
         print(APP_CHOICE_RE)
+        return 0
+    if cmd == "retired-bundles":
+        print(" ".join(sorted(RETIRED_BUNDLES)))
         return 0
     if cmd == "json":
         print(json.dumps(APPS, indent=2, sort_keys=True))

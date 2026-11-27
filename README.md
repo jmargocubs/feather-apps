@@ -14,15 +14,26 @@ working; nobody needs to re-add the source.
 
 ## Listings
 
-| Listing | Bundle ID | Role | IPAs hosted in |
-| --- | --- | --- | --- |
-| Kyro — Build N | `com.cubbiestream.kyro` | Main Kyro iPhone app (recent builds show "Kyro X" on the Home Screen) | `jmargocubs/Kyro` |
-| Kyro Apple TV — Build N | `com.cubbiestream.kyro.tvos` | Main Kyro Apple TV app (approved tvOS line) | `jmargocubs/Kyro` |
-| Kyro X Labs — Build N | `com.cubbiestream.kyro.labs` | Experimental Kyro iPhone builds, separate install | `jmargocubs/Kyro` |
-| Kyro Labs Apple TV — Build N | `com.cubbiestream.kyro.tvos.labs` | Experimental Kyro Apple TV builds, separate install | `jmargocubs/Kyro` |
-| Kyro X — Build N | `com.cubbiestream.kyrox` | Independent Kyro X rebuild, separate app | `jmargocubs/feather-apps` |
-| Zepzi — Build N | `app.flippy.reader` | Comic reader for Komga | `jmargocubs/feather-apps` |
-| Sunny Meadow — Build N | `com.sunnymeadow.app.beta` | Mood check-ins and recovery journaling | `jmargocubs/feather-apps` |
+Exactly four active listings (consolidated 2026-11-27):
+
+| Listing | Bundle ID | App ID | Development branch | IPAs hosted in |
+| --- | --- | --- | --- | --- |
+| Kyro X iOS — Build N | `com.cubbiestream.kyro` | `kyro` | `jmargocubs/Kyro` → `kyro/ios-recovered` | `jmargocubs/Kyro` |
+| Kyro X tvOS — Build N | `com.cubbiestream.kyro.tvos` | `kyro-tvos` | `jmargocubs/Kyro` → `kyro/tvos-recovered` | `jmargocubs/Kyro` |
+| Zepzi — Build N | `app.flippy.reader` | `zepzi` | `jmargocubs/flippy` → `main` | `jmargocubs/feather-apps` |
+| Sunny Meadow — Build N | `com.sunnymeadow.app.beta` | `sunnymeadow` | `jmargocubs/sunnyhill` → `feature/build-50-recovery-polish` | `jmargocubs/feather-apps` |
+
+Kyro X iOS and Kyro X tvOS keep the same bundle IDs as the earlier "Kyro" and
+"Kyro Apple TV" listings, so existing installs keep updating in place.
+
+### Retired listings
+Kyro X Labs (`com.cubbiestream.kyro.labs`), Kyro Labs Apple TV
+(`com.cubbiestream.kyro.tvos.labs`) and the shelved independent Kyro X prototype
+(`com.cubbiestream.kyrox`) were removed from the catalog on 2026-11-27. Their
+source, tags, GitHub releases and IPA assets are kept; the removed entries are
+saved in [docs/retired-listings-20261127.json](docs/retired-listings-20261127.json).
+They are listed in `RETIRED_APPS` in `scripts/apps.py`, and `validate_source.py`,
+`update_source.py` and the Pages deploy refuse any catalog that contains them.
 
 Listing titles always use **App Name — Build N** for the newest build. Installed
 app names come from each IPA and are never rewritten by the catalog. Bundle IDs

@@ -94,7 +94,7 @@ class IndependentVersionFieldsTests(unittest.TestCase):
             head = kyro["versions"][0]
             self.assertEqual(head["version"], "1.0.0")
             self.assertEqual(head["buildVersion"], "1000")
-            self.assertEqual(kyro["name"], "Kyro — Build 1000")
+            self.assertEqual(kyro["name"], "Kyro X iOS — Build 1000")
 
 
 if __name__ == "__main__":

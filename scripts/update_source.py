@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from apps import (  # noqa: E402
     APP_IDS,
     APPS,
+    assert_catalog_allowed,
     assert_independent_version_fields,
     base_name_for,
     bundle_for,
@@ -103,6 +104,18 @@ def refresh_listing_names(data: dict) -> int:
     return changed
 
 
+def write_source(source_path: pathlib.Path, data: dict) -> None:
+    """Write the catalog only if it passes the active/retired listing policy."""
+    try:
+        assert_catalog_allowed(data, tvos=source_path.name.startswith("tvos-"))
+    except ValueError as exc:
+        print(f"refusing to write {source_path}: {exc}", file=sys.stderr)
+        sys.exit(1)
+    with source_path.open("w") as handle:
+        json.dump(data, handle, indent=2)
+        handle.write("\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", default="source.json")
@@ -129,9 +142,7 @@ def main() -> None:
 
     if args.refresh_listing_names:
         changed = refresh_listing_names(data)
-        with source_path.open("w") as handle:
-            json.dump(data, handle, indent=2)
-            handle.write("\n")
+        write_source(source_path, data)
         print(f"refreshed listing names: {changed} app(s) updated")
         return
 
@@ -189,9 +200,7 @@ def main() -> None:
                     return
                 # Exact release row already present; only refresh listing title.
                 apply_catalog_metadata(app, args.app, app.get("versions", []), str(args.build))
-                with source_path.open("w") as handle:
-                    json.dump(data, handle, indent=2)
-                    handle.write("\n")
+                write_source(source_path, data)
                 print(
                     "source entry already matches; refreshed listing name",
                     args.app,
@@ -247,9 +256,7 @@ def main() -> None:
     # Keep catalog listing title current without rewriting unrelated apps or history.
     apply_catalog_metadata(app, args.app, app.get("versions", []), str(args.build))
 
-    with source_path.open("w") as handle:
-        json.dump(data, handle, indent=2)
-        handle.write("\n")
+    write_source(source_path, data)
     print("updated", args.app, args.version, args.build, "listing", app["name"])
 
 

@@ -1,0 +1,186 @@
+{
+  "retired_on": "2026-11-27",
+  "reason": "Catalog consolidated to 4 active listings (Kyro X iOS, Kyro X tvOS, Zepzi, Sunny Meadow). Code, tags, releases and IPA assets retained.",
+  "entries": {
+    "source.json": [
+      {
+        "name": "Kyro X Labs \u2014 Build 117",
+        "bundleIdentifier": "com.cubbiestream.kyro.labs",
+        "developerName": "jmargocubs",
+        "subtitle": "Experimental iPhone builds of Kyro (separate install)",
+        "localizedDescription": "Kyro X Labs is the experimental iPhone edition of Kyro, used to try features such as upstream Silo updates and additional media servers before they reach the main Kyro app. It installs separately from Kyro, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
+        "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-x-labs/icon.png",
+        "tintColor": "#F59E0B",
+        "size": 30150047,
+        "versions": [
+          {
+            "version": "1.0.117",
+            "buildVersion": "117",
+            "date": "2026-11-23",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.117-build117-rc1/Kyro-Labs-1.0.117-117-ios-unsigned-arm64.ipa",
+            "size": 30150047,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "1.0.116",
+            "buildVersion": "116",
+            "date": "2026-11-23",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.116-build116-rc1/Kyro-Labs-1.0.116-116-ios-unsigned-arm64.ipa",
+            "size": 30060063,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "1.0.115",
+            "buildVersion": "115",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.115-build115-rc1/Kyro-Labs-1.0.115-115-ios-unsigned-arm64.ipa",
+            "size": 29487049,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "1.0.114",
+            "buildVersion": "114",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.114-build114-rc1/Kyro-Labs-1.0.114-114-ios-unsigned-arm64.ipa",
+            "size": 29210897,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "1.0.113",
+            "buildVersion": "113",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.113-build113-rc1/Kyro-Labs-1.0.113-113-ios-unsigned-arm64.ipa",
+            "size": 29180295,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "1.0.112",
+            "buildVersion": "112",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.112-build112-rc1/Kyro-Labs-1.0.112-112-ios-unsigned-arm64.ipa",
+            "size": 29172624,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "1.0.111",
+            "buildVersion": "111",
+            "date": "2026-11-21",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-ios-v1.0.111-build111-rc1/Kyro-Labs-1.0.111-111-ios-unsigned-arm64.ipa",
+            "size": 29101793,
+            "minOSVersion": "18.0"
+          }
+        ]
+      },
+      {
+        "name": "Kyro Labs Apple TV \u2014 Build 106",
+        "bundleIdentifier": "com.cubbiestream.kyro.tvos.labs",
+        "developerName": "jmargocubs",
+        "subtitle": "Experimental Apple TV builds of Kyro (separate install)",
+        "localizedDescription": "Kyro Labs Apple TV is the experimental edition of Kyro for tvOS. It installs separately from Kyro Apple TV, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
+        "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
+        "tintColor": "#F59E0B",
+        "size": 21734355,
+        "versions": [
+          {
+            "version": "1.0.106",
+            "buildVersion": "106",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-tvos-v1.0.106-build106-rc1/Kyro-Labs-1.0.106-106-tvos-unsigned-arm64.ipa",
+            "size": 21734355,
+            "minOSVersion": "26.0"
+          },
+          {
+            "version": "1.0.105",
+            "buildVersion": "105",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-tvos-v1.0.105-build105-rc1/Kyro-Labs-1.0.105-105-tvos-unsigned-arm64.ipa",
+            "size": 21732642,
+            "minOSVersion": "26.0"
+          }
+        ]
+      },
+      {
+        "name": "Kyro X \u2014 Build 16",
+        "bundleIdentifier": "com.cubbiestream.kyrox",
+        "developerName": "jmargocubs",
+        "subtitle": "Separate independent Kyro X rebuild (Jellyfin, Silo, IPTV)",
+        "localizedDescription": "Kyro X (independent) is a separate, from-scratch iPhone streaming client with local profiles, direct Jellyfin and Silo server integration, IPTV support and a cinematic player. It is a different app from the main Kyro listing and installs beside it, even though both may show Kyro X on the Home Screen. This unsigned beta requires your own signing and sideloading setup.",
+        "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyrox/icon.png",
+        "tintColor": "#DC2626",
+        "size": 17572733,
+        "versions": [
+          {
+            "version": "0.1.0",
+            "buildVersion": "16",
+            "date": "2026-11-24",
+            "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyrox-v0.1.0-b16/KyroX-v0.1.0-b16-unsigned.ipa",
+            "size": 17572733,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "0.1.0",
+            "buildVersion": "15",
+            "date": "2026-11-24",
+            "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyrox-v0.1.0-b15/KyroX-v0.1.0-b15-unsigned.ipa",
+            "size": 17450245,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "0.1.0",
+            "buildVersion": "3",
+            "date": "2026-11-23",
+            "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyrox-v0.1.0-b3/KyroX-v0.1.0-b3-unsigned.ipa",
+            "size": 14822675,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "0.1.0",
+            "buildVersion": "2",
+            "date": "2026-11-23",
+            "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyrox-v0.1.0-b2/KyroX-v0.1.0-b2-unsigned.ipa",
+            "size": 14230257,
+            "minOSVersion": "18.0"
+          },
+          {
+            "version": "0.1.0",
+            "buildVersion": "1",
+            "date": "2026-11-23",
+            "downloadURL": "https://github.com/jmargocubs/feather-apps/releases/download/kyrox-v0.1.0-b1/KyroX-v0.1.0-b1-unsigned.ipa",
+            "size": 14143761,
+            "minOSVersion": "18.0"
+          }
+        ]
+      }
+    ],
+    "tvos-source.json": [
+      {
+        "name": "Kyro Labs Apple TV \u2014 Build 106",
+        "bundleIdentifier": "com.cubbiestream.kyro.tvos.labs",
+        "developerName": "jmargocubs",
+        "subtitle": "Experimental Apple TV builds of Kyro (separate install)",
+        "localizedDescription": "Kyro Labs Apple TV is the experimental edition of Kyro for tvOS. It installs separately from Kyro Apple TV, keeps its own data and sign-in, and may be less stable. This unsigned beta requires your own signing and sideloading setup.",
+        "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro-labs/icon.png",
+        "tintColor": "#F59E0B",
+        "size": 21734355,
+        "versions": [
+          {
+            "version": "1.0.106",
+            "buildVersion": "106",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-tvos-v1.0.106-build106-rc1/Kyro-Labs-1.0.106-106-tvos-unsigned-arm64.ipa",
+            "size": 21734355,
+            "minOSVersion": "26.0"
+          },
+          {
+            "version": "1.0.105",
+            "buildVersion": "105",
+            "date": "2026-11-22",
+            "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-labs-tvos-v1.0.105-build105-rc1/Kyro-Labs-1.0.105-105-tvos-unsigned-arm64.ipa",
+            "size": 21732642,
+            "minOSVersion": "26.0"
+          }
+        ]
+      }
+    ]
+  }
+}

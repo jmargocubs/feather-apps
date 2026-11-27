@@ -17,6 +17,10 @@ jobs:
       name: github-pages
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Validate catalogs before deploy (refuses retired listings)
+        run: |
+          python3 scripts/validate_source.py source.json
+          python3 scripts/validate_source.py tvos-source.json
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with: { path: "." }

@@ -22,7 +22,7 @@ assert r.returncode==0, f"independent version/build should succeed: {r.stderr}"
 d_indep=json.load(open(os.path.join(tmp,"source.json")))
 kyro=[a for a in d_indep["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro"][0]
 assert kyro["versions"][0]["version"]=="1.0.0" and kyro["versions"][0]["buildVersion"]=="1000"
-assert kyro["name"]=="Kyro — Build 1000"
+assert kyro["name"]=="Kyro X iOS — Build 1000"
 # date check
 d=json.load(open(os.path.join(tmp,"source.json")))
 versions=[v for a in d["apps"] if a["bundleIdentifier"]=="com.cubbiestream.kyro" for v in a["versions"] if v["version"]=="9.9.999"]

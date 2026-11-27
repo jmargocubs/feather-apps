@@ -251,9 +251,9 @@ def update_catalog(
                 json.dumps(
                     {
                         "name": "jmargocubs Apps — Apple TV",
-                        "subtitle": "Kyro Apple TV beta builds",
+                        "subtitle": "Kyro X tvOS beta builds",
                         "description": (
-                            "AltStore-compatible tvOS source for Kyro Apple TV "
+                            "AltStore-compatible tvOS source for Kyro X tvOS "
                             "beta IPAs hosted on GitHub Releases."
                         ),
                         "iconURL": APPS[app]["icon_url"],
@@ -297,7 +297,7 @@ def commit_and_push_source(app: str, version: str, build: str, dry_run: bool) ->
     if (ROOT / "tvos-source.json").exists():
         run(["git", "add", "tvos-source.json"], cwd=ROOT)
     # Include workflow/script/doc updates that belong with the permanent policy.
-    for path in ("scripts/apps.py", "scripts/scan_ipa.py", "scripts/update_source.py", "scripts/publish_ipa.py", "assets/kyrox/icon.png", "README.md", "docs/release-process.md", "docs/nullsign-auto-publish.md"):
+    for path in ("scripts/apps.py", "scripts/scan_ipa.py", "scripts/update_source.py", "scripts/publish_ipa.py", "README.md", "docs/release-process.md", "docs/nullsign-auto-publish.md"):
         if (ROOT / path).exists():
             run(["git", "add", path], cwd=ROOT, check=False)
 
@@ -331,12 +331,13 @@ def rewrite_source_header() -> None:
     """Keep top-level source descriptions current without rewriting app history."""
     source_path = ROOT / "source.json"
     data = json.loads(source_path.read_text())
-    data["subtitle"] = "Kyro, Kyro Apple TV, Zepzi, and Sunny Meadow beta builds"
+    data["subtitle"] = "Kyro X (iPhone and Apple TV), Zepzi and Sunny Meadow beta builds"
     data["description"] = (
-        "AltStore-compatible source for Kyro (iOS), Kyro Apple TV (tvOS), "
-        "Zepzi, and Sunny Meadow beta IPAs hosted on GitHub Releases. "
-        "Repository listings show App Name — Build N; installed app titles "
-        "come from each IPA and are unchanged by this catalog."
+        "App source for Kyro X iOS, Kyro X tvOS, Zepzi and Sunny Meadow. "
+        "Beta IPAs are unsigned and hosted on GitHub Releases; use any signing "
+        "or sideloading app that reads the standard source.json format. "
+        "Listings show App Name — Build N; the installed app name comes from "
+        "each IPA and is not changed by this catalog."
     )
     source_path.write_text(json.dumps(data, indent=2) + "\n")
 
