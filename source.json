@@ -9,15 +9,23 @@
   "featuredApps": [],
   "apps": [
     {
-      "name": "Kyro X \u2014 Build 141",
+      "name": "Kyro X \u2014 Build 144",
       "bundleIdentifier": "com.cubbiestream.kyro",
       "developerName": "jmargocubs",
       "subtitle": "Kyro X for iPhone: Silo media, Live TV, Sports, Radio and Podcasts",
       "localizedDescription": "Kyro X is the iPhone streaming client built on Silo. It brings your self-hosted movies and shows together with Live TV and guide, a Sports Hub, internet Radio and Podcasts. Same app and bundle as earlier Kyro builds, so existing installs update in place. This unsigned beta requires your own signing and sideloading setup.",
       "iconURL": "https://jmargocubs.github.io/feather-apps/assets/kyro/icon.png",
       "tintColor": "#4F46E5",
-      "size": 45676615,
+      "size": 46288908,
       "versions": [
+        {
+          "version": "1.0.144",
+          "buildVersion": "144",
+          "date": "2026-11-28",
+          "downloadURL": "https://github.com/jmargocubs/Kyro/releases/download/kyro-ios-v1.0.144-build144-rc1/Kyro-iOS-v1.0.144-Build144-Unsigned.ipa",
+          "size": 46288908,
+          "minOSVersion": "18.0"
+        },
         {
           "version": "1.0.141",
           "buildVersion": "141",
